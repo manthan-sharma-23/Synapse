@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDirs": ["./src", "./drizzle.config.ts"],
+    "strict": true,
+    "esModuleInterop": true
+  }
+}
