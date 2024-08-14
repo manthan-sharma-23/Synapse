@@ -1,5 +1,5 @@
+import { relations } from "drizzle-orm";
 import {
-  index,
   pgTable,
   timestamp,
   uniqueIndex,
@@ -7,11 +7,11 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const user = pgTable(
+export const userTable = pgTable(
   "users",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: varchar("name", { length: 255 }).notNull(),
+    id: uuid("id").primaryKey().defaultRandom().unique(),
+    name: varchar("name", { length: 255 }),
     email: varchar("email", { length: 255 }).unique().notNull(),
     username: varchar("username", { length: 255 }).unique().notNull(),
     password: varchar("password", { length: 255 }).notNull(),
@@ -24,31 +24,31 @@ export const user = pgTable(
   })
 );
 
-export const userPreferences = pgTable("user_preferences", {
+export const userPreferencesTable = pgTable("user_preferences", {
   id: uuid("user_preferences").primaryKey().defaultRandom(),
   theme: varchar("theme", { length: 255 }).default("default"),
   userId: uuid("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
 });
 
-export const room = pgTable("rooms", {
+export const roomTable = pgTable("rooms", {
   id: uuid("id").primaryKey().defaultRandom(),
   type: varchar("type").notNull().$type<"peer" | "group">(),
   name: varchar("name", { length: 20 }).notNull(), // Consider adding notNull() if it's required
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const userRoom = pgTable(
+export const userRoomTable = pgTable(
   "user_room",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => user.id),
+      .references(() => userTable.id),
     roomId: uuid("room_id")
       .notNull()
-      .references(() => room.id),
+      .references(() => roomTable.id),
     joinedAt: timestamp("joined_at").notNull(),
   },
   (table) => ({
@@ -56,15 +56,36 @@ export const userRoom = pgTable(
   })
 );
 
-export const chat = pgTable("chats", {
+export const chatTable = pgTable("chats", {
   id: uuid("id").primaryKey().defaultRandom(),
   type: varchar("type").notNull().$type<"text" | "image" | "video">(),
   url: varchar("url", { length: 255 }), // Made nullable for non-media chats
   createdAt: timestamp("created_at").notNull().defaultNow(),
   roomId: uuid("room_id")
     .notNull()
-    .references(() => room.id, { onDelete: "cascade" }),
+    .references(() => roomTable.id, { onDelete: "cascade" }),
   userId: uuid("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+    .references(() => userTable.id, { onDelete: "cascade" }),
 });
+
+// RELATIONS
+
+export const userPreferencesRelation = relations(userTable, ({ one }) => ({
+  preferences: one(userPreferencesTable, {
+    fields: [userTable.id],
+    references: [userPreferencesTable.userId],
+  }),
+}));
+
+export const userRoomRelation = relations(userTable, ({ many }) => ({
+  rooms: many(roomTable),
+}));
+
+export const userChatRelation = relations(userTable, ({ many }) => ({
+  chats: many(chatTable),
+}));
+
+export const roomChatRelation = relations(roomTable, ({ many }) => ({
+  chats: many(chatTable),
+}));
