@@ -10,4 +10,5 @@ export const env = {
   node_env: process.env.NODE_ENV! as "dev" | "prod",
   port: Number(process.env.PORT!) || 2800,
   JWT_SECRET: process.env.JWT_SECRET!,
+  REDIS_URL: process.env.REDIS_URL!,
 };
