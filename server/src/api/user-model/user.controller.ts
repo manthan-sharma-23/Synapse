@@ -8,7 +8,7 @@ import {
   USER_DOESNT_EXISTS,
   USER_LOGGED_IN_SUCCESSFULLY,
 } from "../../core/lib/errors";
-import db, { userTable } from "../../db";
+import db, { userPreferencesTable, userTable } from "../../db";
 import { UserValidator } from "../../core/lib/types/validators/user.validators";
 import bcryptService from "../../core/services/bcrypt.service";
 import jwtService from "../../core/services/jwt.service";
@@ -23,7 +23,11 @@ class UserController {
       const user = await db
         .select()
         .from(userTable)
-        .where(eq(userTable.id, userId));
+        .where(eq(userTable.id, userId))
+        .leftJoin(
+          userPreferencesTable,
+          eq(userPreferencesTable.userId, userId)
+        );
 
       return res.json(user[0]);
     } catch (error) {
@@ -93,6 +97,12 @@ class UserController {
           password: hash_password,
         })
         .returning();
+
+      const create_user_preferences = await db
+        .insert(userPreferencesTable)
+        .values({
+          userId: create_user[0].id,
+        });
 
       const token = jwtService.sign_token({ userId: create_user[0].id });
 

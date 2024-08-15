@@ -35,7 +35,7 @@ export const userPreferencesTable = pgTable("user_preferences", {
 export const roomTable = pgTable("rooms", {
   id: uuid("id").primaryKey().defaultRandom(),
   type: varchar("type").notNull().$type<"peer" | "group">(),
-  name: varchar("name", { length: 20 }).notNull(), // Consider adding notNull() if it's required
+  name: varchar("name", { length: 20 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

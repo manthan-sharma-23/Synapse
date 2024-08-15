@@ -12,3 +12,5 @@ class RedisService {
     return this.redis;
   }
 }
+
+export default RedisService;
