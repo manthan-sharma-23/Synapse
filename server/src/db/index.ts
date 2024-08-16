@@ -10,4 +10,5 @@ client.connect().then(() => {
 const db = drizzle(client, { schema, logger: env.node_env === "dev" });
 
 export default db;
+
 export * from "./schema";

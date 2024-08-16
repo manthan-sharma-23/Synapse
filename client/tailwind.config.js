@@ -17,6 +17,12 @@ module.exports = {
       },
     },
     extend: {
+      colors: {
+        shade: "#F6F6F6"
+      },
+      fontFamily: {
+        poppins: "Poppins"
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

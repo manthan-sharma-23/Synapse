@@ -8,17 +8,17 @@ import {
   USER_DOESNT_EXISTS,
   USER_LOGGED_IN_SUCCESSFULLY,
 } from "../../core/lib/errors";
-import db, { userPreferencesTable, userTable } from "../../db";
+import db, { userPreferencesTable, userTable } from "../../db/";
 import { UserValidator } from "../../core/lib/types/validators/user.validators";
 import bcryptService from "../../core/services/bcrypt.service";
 import jwtService from "../../core/services/jwt.service";
 import { eq } from "drizzle-orm";
+import databaseService from "../../db/database.service";
 
 class UserController {
   async get_user(req: Request, res: Response) {
     try {
       const { userId } = req.user;
-      console.log(userId);
 
       const user = await db
         .select()
@@ -29,7 +29,10 @@ class UserController {
           eq(userPreferencesTable.userId, userId)
         );
 
-      return res.json(user[0]);
+      return res.status(200).json({
+        user: user[0].users,
+        user_preferences: user[0].user_preferences,
+      });
     } catch (error) {
       console.log("ERROR :: ", error);
       return res.sendStatus(INTERNAL_SERVER_ERROR.code);
@@ -40,8 +43,8 @@ class UserController {
     try {
       const input = UserValidator.parse(req.body);
 
-      const user = await db.query.userTable.findFirst({
-        where: (user, { eq }) => eq(user.email, input.email),
+      const user = await databaseService.user.find_user_by_email({
+        email: input.email,
       });
 
       if (!user) {
@@ -59,6 +62,8 @@ class UserController {
         return res
           .status(INVALID_CREDENTIALS.code)
           .json({ message: INVALID_CREDENTIALS.action.message });
+
+      
 
       const token = jwtService.sign_token({ userId: user.id });
       return res.status(USER_LOGGED_IN_SUCCESSFULLY.code).json({

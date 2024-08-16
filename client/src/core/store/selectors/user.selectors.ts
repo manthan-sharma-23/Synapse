@@ -10,7 +10,7 @@ export const UserSelector = selector({
   },
 });
 
-export const UserPreferenceSelector = selector({
+export const UserPreferencesSelector = selector({
   key: "user/preference/selector/main",
   get: ({ get }) => {
     const user = get(UserAtom);

@@ -41,3 +41,8 @@ export interface IChat {
   roomId: string;
   userId: string;
 }
+
+export interface IRoomDetails {
+  room: IRoom;
+  users: IUser[];
+}

@@ -5,6 +5,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const userTable = pgTable(
@@ -16,7 +17,9 @@ export const userTable = pgTable(
     username: varchar("username", { length: 255 }).unique().notNull(),
     password: varchar("password", { length: 255 }).notNull(),
     image: varchar("image", { length: 500 }),
-    createdAt: timestamp("created_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    status: boolean("online_status").default(false).notNull(),
+    lastLoggedIn: timestamp("last_logged_in").defaultNow().notNull(),
   },
   (table) => ({
     emailIdx: uniqueIndex("user_email_idx").on(table.email),
@@ -45,11 +48,11 @@ export const userRoomTable = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => userTable.id),
+      .references(() => userTable.id, { onDelete: "cascade" }),
     roomId: uuid("room_id")
       .notNull()
-      .references(() => roomTable.id),
-    joinedAt: timestamp("joined_at").notNull(),
+      .references(() => roomTable.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at").notNull().defaultNow(),
   },
   (table) => ({
     userRoomIdx: uniqueIndex("user_room_idx").on(table.userId, table.roomId), // Renamed index for clarity
@@ -89,3 +92,12 @@ export const userChatRelation = relations(userTable, ({ many }) => ({
 export const roomChatRelation = relations(roomTable, ({ many }) => ({
   chats: many(chatTable),
 }));
+
+export type InsertRoom = typeof roomTable.$inferInsert;
+export type SelectRoom = typeof roomTable.$inferSelect;
+
+export type InsertUserRoom = typeof userRoomTable.$inferInsert;
+export type SelectUserRoom = typeof userRoomTable.$inferSelect;
+
+export type InsertUser = typeof userTable.$inferInsert;
+export type SelectUser = typeof userTable.$inferSelect;

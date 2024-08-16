@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import userModel from "@/core/api/user.model";
 import { AuthenticateUser } from "@/core/lib/types/auth.types";
-import { AxiosError } from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -40,6 +39,7 @@ const Signin = () => {
       toast.error("Please add both email and password !");
     }
   };
+
 
   return (
     <Card className="mx-auto max-w-sm">

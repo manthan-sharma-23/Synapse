@@ -12,7 +12,6 @@ export const AuthenticationMiddleware = (
   if (token.startsWith("Bearer ")) token = token.split(" ")[1];
 
   const user = jwtService.decode_token(token);
-  console.log(user);
 
   if (!user || !user.userId) {
     return res
