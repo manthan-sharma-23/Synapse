@@ -36,6 +36,10 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const roomId = params.get("roomId");
+
+  if (!userRoom.member) {
+    return;
+  }
   return (
     <div
       onClick={() => {
@@ -61,11 +65,13 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
           <p className="text-lg font-medium">
             {userRoom.member.name || userRoom.member.username}
           </p>
-          <p className="text-sm text-gray-500 font-medium">
-            {moment(userRoom.chat.createdAt).fromNow()}
-          </p>
+          {userRoom.chat && (
+            <p className="text-sm text-gray-500 font-medium">
+              {moment(userRoom.chat.createdAt).fromNow()}
+            </p>
+          )}
         </div>
-        <p>{userRoom.chat.text}</p>
+        {userRoom.chat && <p>{userRoom.chat.text}</p>}
       </div>
     </div>
   );

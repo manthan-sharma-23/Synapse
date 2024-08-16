@@ -8,12 +8,13 @@ import { GoPaperclip } from "react-icons/go";
 import React, { useEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { UserAtom } from "@/core/store/atom/user.atom";
-import { Socket } from "socket.io-client";
+
 import ChatsDisplay from "@/components/utilities/ChatsDisplay";
 import { RoomChats } from "@/core/lib/types/global.types";
 import { ChatAtom } from "@/core/store/atom/chat.atom";
+import { socket } from "@/socket";
 
-const Chat = ({ socket }: { socket: Socket }) => {
+const Chat = () => {
   const { roomDetails, loading, roomId } = useGetRoomDetails();
   const user = useRecoilValue(UserAtom);
   const [event] = useState<string | null>(null);
@@ -22,24 +23,19 @@ const Chat = ({ socket }: { socket: Socket }) => {
 
   useEffect(() => {
     if (socket) {
+      socket.emit("join:room", { roomId });
+
       socket.on("user:typing", (data) => {
         console.log(data);
       });
 
       socket.on("user:message", (data) => {
         const chat = data as RoomChats;
+
         setChatsInBox((v) => [...v, chat]);
       });
     }
   }, []);
-
-  useEffect(() => {
-    if (roomId && socket) {
-      socket.emit("join:room", { roomId });
-    } else {
-      console.log("NO socket");
-    }
-  }, [roomId, user]);
 
   if (!roomDetails) {
     return <NoChatWindow />;

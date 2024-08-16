@@ -93,6 +93,11 @@ export default class SocketService {
         redisService.update_room_chats({ chat, roomId });
       });
 
+      socket.on("event:user-leave-room", ({ roomId }) => {
+        console.log("\nLEFT ROOM\n", roomId);
+        socket.leave(roomId);
+      });
+
       socket.on("disconnect", async () => {
         const userId = this.user_map.get(socket.id);
         this.user_map.delete(socket.id);

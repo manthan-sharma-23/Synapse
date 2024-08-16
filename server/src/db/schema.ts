@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm";
 import {
   pgTable,
   timestamp,
@@ -55,7 +54,7 @@ export const userRoomTable = pgTable(
     joinedAt: timestamp("joined_at").notNull().defaultNow(),
   },
   (table) => ({
-    userRoomIdx: uniqueIndex("user_room_idx").on(table.userId, table.roomId), // Renamed index for clarity
+    userRoomIdx: uniqueIndex("user_room_idx").on(table.userId, table.roomId),
   })
 );
 
@@ -63,7 +62,7 @@ export const chatTable = pgTable("chats", {
   id: uuid("id").primaryKey().defaultRandom(),
   text: varchar("text", { length: 400 }),
   type: varchar("type").notNull().$type<"text" | "image" | "video">(),
-  url: varchar("url", { length: 255 }), // Made nullable for non-media chats
+  url: varchar("url", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   roomId: uuid("room_id")
     .notNull()
@@ -73,26 +72,19 @@ export const chatTable = pgTable("chats", {
     .references(() => userTable.id, { onDelete: "cascade" }),
 });
 
-// RELATIONS
-
-export const userPreferencesRelation = relations(userTable, ({ one }) => ({
-  preferences: one(userPreferencesTable, {
-    fields: [userTable.id],
-    references: [userPreferencesTable.userId],
-  }),
-}));
-
-export const userRoomRelation = relations(userTable, ({ many }) => ({
-  rooms: many(roomTable),
-}));
-
-export const userChatRelation = relations(userTable, ({ many }) => ({
-  chats: many(chatTable),
-}));
-
-export const roomChatRelation = relations(roomTable, ({ many }) => ({
-  chats: many(chatTable),
-}));
+export const groupInvite = pgTable("group_invites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roomId: uuid("room_id")
+    .notNull()
+    .references(() => roomTable.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => userTable.id),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => userTable.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
 export type InsertRoom = typeof roomTable.$inferInsert;
 export type SelectRoom = typeof roomTable.$inferSelect;
@@ -105,3 +97,6 @@ export type SelectUser = typeof userTable.$inferSelect;
 
 export type InsertChat = typeof chatTable.$inferInsert;
 export type SelectChat = typeof chatTable.$inferSelect;
+
+export type SelectGroupInvite = typeof groupInvite.$inferSelect;
+export type InsertGroupInvite = typeof groupInvite.$inferInsert;

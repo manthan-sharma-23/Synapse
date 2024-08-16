@@ -8,6 +8,6 @@ export interface RoomChats {
 
 export interface UserRoomList {
   room: IRoom;
-  chat: IChat;
-  member: IUser;
+  chat: IChat | null;
+  member: IUser | null;
 }
