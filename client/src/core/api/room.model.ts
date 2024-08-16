@@ -12,6 +12,7 @@ class RoomModel {
   }
 
   async get_room_details(input: { roomId?: string }) {
+    if (!input.roomId) return;
     const res = (
       await axios.get(this.base_url + `/${input.roomId}`, {
         headers: {

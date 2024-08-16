@@ -31,6 +31,8 @@ export default class SocketService {
   private async listenEvents(io: io.Server) {
     io.on("connection", (socket) => {
       socket.on("set-alive", async ({ userId }) => {
+        console.log("ALIVE THINGY",userId);
+
         this.user_map.set(socket.id, userId);
         await db.user.update_user_status({ userId, status: true });
       });
@@ -57,9 +59,27 @@ export default class SocketService {
         }
       );
 
+      //relay
+      socket.on("join:room", ({ roomId }) => {
+        console.log("JOIN REQ");
+
+        socket.join(roomId);
+      });
+
+      // events
+      socket.on("event:typing", ({ roomId, user }) => {
+        socket.to(roomId).emit("user:typing", `${user.name} is typing...`);
+      });
+
+      socket.on("event:message", ({ user, roomId, message }) => {
+        socket.to(roomId).emit("user:message", { message, user, roomId });
+      });
+
       socket.on("disconnect", async () => {
         const userId = this.user_map.get(socket.id);
         this.user_map.delete(socket.id);
+        console.log("ALIVE THINGY oFF");
+
         if (userId) {
           await db.user.update_user_status({ userId, status: false });
           await db.user.update_user_last_seen({ id: userId });

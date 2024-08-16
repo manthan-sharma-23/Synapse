@@ -15,5 +15,5 @@ export const useGetRoomDetails = () => {
     queryKey: ["room/details", { roomId }],
   });
 
-  return { roomDetails, loading, error };
+  return { roomDetails, loading, error, roomId };
 };

@@ -1,6 +1,6 @@
 import { configurations } from "@/core/lib/config/config";
 import { UserSelector } from "@/core/store/selectors/user.selectors";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { io, Socket } from "socket.io-client";
 import { IRoom, IUser } from "@/core/lib/types/schema";
@@ -17,22 +17,25 @@ const Home = () => {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
 
-  const socketRef = useRef<Socket | null>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const user = useRecoilValue(UserSelector);
   const [resultedUsers, setResultedUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
     const socketInstance = io(configurations.server.http_url);
+    socketInstance.connect();
 
     socketInstance.on("connect", () => {
-      socketRef.current = socketInstance;
-
-      socketInstance.emit("set-alive", { userId: user?.id });
+      setSocket(socketInstance);
+      if (user) {
+        socketInstance.emit("set-alive", { userId: user?.id });
+      }
     });
 
     return () => {
+      console.log("Component unmounted");
+
       socketInstance.disconnect();
-      socketRef.current = null;
     };
   }, [user]);
 
@@ -55,11 +58,11 @@ const Home = () => {
 
   function sendRequest(type: string, data: unknown = {}) {
     return new Promise((resolve, reject) => {
-      if (!socketRef.current) {
+      if (!socket) {
         console.log("No socket state active");
         return;
       }
-      socketRef.current.emit(type, data, (response: unknown, err: unknown) => {
+      socket.emit(type, data, (response: unknown, err: unknown) => {
         if (!err) {
           resolve(response);
         } else {
@@ -130,9 +133,7 @@ const Home = () => {
           )}
         </div>
       </div>
-      <div className="h-full w-2/3">
-        <Chat />
-      </div>
+      <div className="h-full w-2/3">{socket && <Chat socket={socket} />}</div>
     </div>
   );
 };

@@ -64,10 +64,16 @@ export class DatabaseService {
   }
 
   private async update_user_status(input: { userId: string; status: boolean }) {
-    await db
-      .update(schema.userTable)
-      .set({ status: input.status })
-      .where(eq(schema.userTable.id, input.userId));
+    try {
+      await db
+        .update(schema.userTable)
+        .set({ status: input.status })
+        .where(eq(schema.userTable.id, input.userId));
+      return;
+    } catch (error) {
+      console.log(error);
+      return;
+    }
   }
 
   private async select_room_by_id(input: { id: string }) {
@@ -204,6 +210,26 @@ export class DatabaseService {
     return user_room;
   }
 
+  private async get_room_chats(input: { roomId: string; offset?: number }) {
+    const chats = await db
+      .select()
+      .from(schema.chatTable)
+      .where(eq(schema.chatTable.roomId, input.roomId))
+      .leftJoin(
+        schema.userTable,
+        eq(schema.userTable.id, schema.chatTable.userId)
+      )
+      .offset(input.offset || 0)
+      .limit(25);
+
+    return chats;
+  }
+
+  private async add_chat_to_room(input: schema.InsertChat) {
+    const chat = await db.insert(schema.chatTable).values(input).returning();
+    return chat[0];
+  }
+
   get room() {
     return {
       create_room: this.create_room,
@@ -229,6 +255,13 @@ export class DatabaseService {
       create_user_room: this.create_user_room,
       get_user_room: this.get_user_room,
       delete_user_room: this.delete_user_room,
+    };
+  }
+
+  get chats() {
+    return {
+      get_room_chats: this.get_room_chats,
+      add_chat_to_room: this.add_chat_to_room,
     };
   }
 }

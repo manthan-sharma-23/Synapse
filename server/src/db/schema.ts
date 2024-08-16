@@ -101,3 +101,6 @@ export type SelectUserRoom = typeof userRoomTable.$inferSelect;
 
 export type InsertUser = typeof userTable.$inferInsert;
 export type SelectUser = typeof userTable.$inferSelect;
+
+export type InsertChat = typeof chatTable.$inferInsert;
+export type SelectChat = typeof chatTable.$inferSelect;

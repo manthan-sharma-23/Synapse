@@ -10,6 +10,8 @@ const PeerBanner = ({
   peer: IUser;
   event?: string | null;
 }) => {
+  console.log(peer);
+
   return (
     <div className="h-full w-full flex pl-8 items-center justify-start gap-4">
       <Avatar className="h-[4rem] w-[4rem]">
