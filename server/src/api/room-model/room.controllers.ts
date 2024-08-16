@@ -2,6 +2,7 @@ import { Response } from "express";
 import { Request } from "express";
 import databaseService from "../../db/database.service";
 import { SelectUser } from "../../db";
+import { redisService } from "../../core/services/redis.service";
 
 class RoomController {
   async get_room_details(req: Request, res: Response) {
@@ -23,6 +24,27 @@ class RoomController {
       });
 
       return res.status(200).json({ room, users });
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
+
+  async get_room_chats(req: Request, res: Response) {
+    try {
+      const { roomId } = req.params;
+
+      const chats_cached = await redisService.get_room_chats({ roomId });
+
+      if (chats_cached) {
+        return res.status(200).json(chats_cached);
+      }
+
+      const chats = await databaseService.chats.get_room_chats({ roomId });
+
+      await redisService.set_room_chats({ chats, roomId });
+
+      return res.status(200).json(chats);
     } catch (error) {
       console.log(error);
       return res.sendStatus(500);

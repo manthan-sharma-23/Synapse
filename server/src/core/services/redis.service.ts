@@ -1,6 +1,7 @@
 import { Redis } from "ioredis";
 import { env } from "../config/env";
 import { SelectChat } from "../../db";
+import { RoomChats } from "../lib/types/global.type";
 
 class RedisService {
   private redis: Redis;
@@ -9,10 +10,10 @@ class RedisService {
     this.redis = new Redis(env.REDIS_URL);
   }
 
-  async update_room_chats(input: { chat: SelectChat; roomId: string }) {
+  async update_room_chats(input: { chat: RoomChats; roomId: string }) {
     const chat_key = this.room_chat_key(input.roomId);
     const chats_cache = await this.redis.get(chat_key);
-    let chats: SelectChat[];
+    let chats: RoomChats[];
     if (!chats_cache) {
       chats = [input.chat];
     } else {
@@ -23,8 +24,25 @@ class RedisService {
     await this.redis.set(chat_key, JSON.stringify(chats));
   }
 
+  async set_room_chats(input: { chats: RoomChats[]; roomId: string }) {
+    const chat_key = this.room_chat_key(input.roomId);
+
+    await this.redis.set(chat_key, JSON.stringify(input.chats));
+  }
+
+  async get_room_chats(input: { roomId: string }) {
+    const chat_key = this.room_chat_key(input.roomId);
+    const chats = await this.redis.get(chat_key);
+
+    if (!chats) {
+      return null;
+    } else {
+      return this.parse_to_chats_array(chats);
+    }
+  }
+
   private parse_to_chats_array(chats: string) {
-    return JSON.parse(chats) as SelectChat[];
+    return JSON.parse(chats) as RoomChats[];
   }
 
   private room_chat_key(roomId: string) {
@@ -37,3 +55,5 @@ class RedisService {
 }
 
 export default RedisService;
+
+export const redisService = new RedisService();

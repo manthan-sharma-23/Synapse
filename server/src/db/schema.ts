@@ -61,6 +61,7 @@ export const userRoomTable = pgTable(
 
 export const chatTable = pgTable("chats", {
   id: uuid("id").primaryKey().defaultRandom(),
+  text: varchar("text", { length: 400 }),
   type: varchar("type").notNull().$type<"text" | "image" | "video">(),
   url: varchar("url", { length: 255 }), // Made nullable for non-media chats
   createdAt: timestamp("created_at").notNull().defaultNow(),

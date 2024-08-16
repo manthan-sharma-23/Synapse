@@ -42,6 +42,7 @@ export interface IChat {
   createdAt: Date;
   roomId: string;
   userId: string;
+  text?: string;
 }
 
 export interface IRoomDetails {

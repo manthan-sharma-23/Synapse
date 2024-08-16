@@ -1,6 +1,7 @@
 import axios from "axios";
 import { configurations } from "../lib/config/config";
 import { IRoomDetails } from "../lib/types/schema";
+import { RoomChats } from "../lib/types/global.types";
 
 class RoomModel {
   private base_url: string;
@@ -20,6 +21,22 @@ class RoomModel {
         },
       })
     ).data as IRoomDetails;
+
+    return res;
+  }
+
+  async get_room_chats(input: { roomId?: string }) {
+    if (!input.roomId) {
+      return;
+    }
+
+    const res = (
+      await axios.get(this.base_url + `/chats/${input.roomId}`, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as RoomChats[];
 
     return res;
   }

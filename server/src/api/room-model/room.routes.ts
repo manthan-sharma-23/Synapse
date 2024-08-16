@@ -4,10 +4,12 @@ import RoomControllers from "./room.controllers";
 
 const router: Router = Router();
 
-router.get(
-  "/:roomId",
-  AuthenticationMiddleware,
-  RoomControllers.get_room_details
-);
+router
+  .get(
+    "/chats/:roomId",
+    AuthenticationMiddleware,
+    RoomControllers.get_room_chats
+  )
+  .get("/:roomId", AuthenticationMiddleware, RoomControllers.get_room_details);
 
 export default router;

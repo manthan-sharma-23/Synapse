@@ -215,7 +215,7 @@ export class DatabaseService {
       .select()
       .from(schema.chatTable)
       .where(eq(schema.chatTable.roomId, input.roomId))
-      .leftJoin(
+      .innerJoin(
         schema.userTable,
         eq(schema.userTable.id, schema.chatTable.userId)
       )
@@ -226,7 +226,17 @@ export class DatabaseService {
   }
 
   private async add_chat_to_room(input: schema.InsertChat) {
-    const chat = await db.insert(schema.chatTable).values(input).returning();
+    const chat_create = (
+      await db.insert(schema.chatTable).values(input).returning()
+    )[0];
+
+    const chat = await db
+      .select()
+      .from(schema.chatTable)
+      .where(eq(schema.chatTable.id, chat_create.id))
+      .innerJoin(schema.userTable, eq(schema.userTable.id, chat_create.userId))
+      .limit(1);
+
     return chat[0];
   }
 

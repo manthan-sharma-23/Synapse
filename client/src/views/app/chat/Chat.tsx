@@ -5,16 +5,20 @@ import ChatProfile from "@/components/utilities/ChatProfile";
 import { useGetRoomDetails } from "@/core/hooks/useGetRoomDetails";
 import { TbSend2 } from "react-icons/tb";
 import { GoPaperclip } from "react-icons/go";
-import { useEffect, useState } from "react";
-import { useRecoilValue } from "recoil";
+import React, { useEffect, useState } from "react";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { UserAtom } from "@/core/store/atom/user.atom";
 import { Socket } from "socket.io-client";
+import ChatsDisplay from "@/components/utilities/ChatsDisplay";
+import { RoomChats } from "@/core/lib/types/global.types";
+import { ChatAtom } from "@/core/store/atom/chat.atom";
 
 const Chat = ({ socket }: { socket: Socket }) => {
   const { roomDetails, loading, roomId } = useGetRoomDetails();
   const user = useRecoilValue(UserAtom);
   const [event] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const setChatsInBox = useSetRecoilState(ChatAtom);
 
   useEffect(() => {
     if (socket) {
@@ -23,7 +27,8 @@ const Chat = ({ socket }: { socket: Socket }) => {
       });
 
       socket.on("user:message", (data) => {
-        console.log(data);
+        const chat = data as RoomChats;
+        setChatsInBox((v) => [...v, chat]);
       });
     }
   }, []);
@@ -51,6 +56,14 @@ const Chat = ({ socket }: { socket: Socket }) => {
     };
 
     socket?.emit("event:message", { message, roomId, user });
+
+    setText("");
+  };
+
+  const onPressEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      sendChatToRoom();
+    }
   };
 
   return (
@@ -58,12 +71,15 @@ const Chat = ({ socket }: { socket: Socket }) => {
       <Card className="w-full h-[10%] rounded-none bg-shade border-none">
         {roomDetails && <ChatProfile roomDetails={roomDetails} event={event} />}
       </Card>
-      <div className="w-full h-[80%] rounded-none bg-white"></div>
+      <div className="w-full h-[80%] rounded-none bg-white">
+        <ChatsDisplay type={roomDetails.room.type} />
+      </div>
       <div className="relative w-full h-[10%] rounded-none border-t flex justify-center items-center px-8 py-6">
         <div className="relative h-[6vh] w-full bg-shade flex rounded-md border border-gray-400 pr-6">
           <Input
+            value={text}
             onChange={(e) => setText(e.target.value)}
-            // onKeyDown={(e)=>{e.key}}
+            onKeyDown={(e) => onPressEnter(e)}
             className="bg-shade border-none h-full text-lg placeholder:text-lg placeholder:font-medium placeholder:text-gray-500 pl-4 pr-12"
             placeholder="Type your message here"
           />
