@@ -32,7 +32,7 @@ export default class SocketService {
     io.on("connection", (socket) => {
       socket.on("set-alive", async ({ userId }) => {
         this.user_map.set(socket.id, userId);
-        await redis.set(`user-alive-${userId}`, "ALIVE");
+        await db.user.update_user_status({ userId, status: true });
       });
 
       socket.on(
@@ -60,7 +60,10 @@ export default class SocketService {
       socket.on("disconnect", async () => {
         const userId = this.user_map.get(socket.id);
         this.user_map.delete(socket.id);
-        await redis.set(`user-alive-${userId}`, "DEAD");
+        if (userId) {
+          await db.user.update_user_status({ userId, status: false });
+          await db.user.update_user_last_seen({ id: userId });
+        }
       });
     });
   }

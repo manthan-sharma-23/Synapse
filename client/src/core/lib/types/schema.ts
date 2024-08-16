@@ -7,6 +7,8 @@ export interface IUser {
   password: string;
   image?: string | null;
   createdAt: Date;
+  status: boolean;
+  lastLoggedIn: Date;
 }
 
 // User Preferences interface

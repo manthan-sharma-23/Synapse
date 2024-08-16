@@ -8,11 +8,9 @@ import {
   USER_DOESNT_EXISTS,
   USER_LOGGED_IN_SUCCESSFULLY,
 } from "../../core/lib/errors";
-import db, { userPreferencesTable, userTable } from "../../db/";
 import { UserValidator } from "../../core/lib/types/validators/user.validators";
 import bcryptService from "../../core/services/bcrypt.service";
 import jwtService from "../../core/services/jwt.service";
-import { eq } from "drizzle-orm";
 import databaseService from "../../db/database.service";
 
 class UserController {
@@ -20,18 +18,11 @@ class UserController {
     try {
       const { userId } = req.user;
 
-      const user = await db
-        .select()
-        .from(userTable)
-        .where(eq(userTable.id, userId))
-        .leftJoin(
-          userPreferencesTable,
-          eq(userPreferencesTable.userId, userId)
-        );
+      const user = await databaseService.user.get_user({ userId });
 
       return res.status(200).json({
-        user: user[0].users,
-        user_preferences: user[0].user_preferences,
+        user: user.users,
+        user_preferences: user.user_preferences,
       });
     } catch (error) {
       console.log("ERROR :: ", error);
@@ -63,7 +54,7 @@ class UserController {
           .status(INVALID_CREDENTIALS.code)
           .json({ message: INVALID_CREDENTIALS.action.message });
 
-      
+      await databaseService.user.update_user_last_seen(user);
 
       const token = jwtService.sign_token({ userId: user.id });
       return res.status(USER_LOGGED_IN_SUCCESSFULLY.code).json({
@@ -80,8 +71,8 @@ class UserController {
     try {
       const input = UserValidator.parse(req.body);
 
-      const user = await db.query.userTable.findFirst({
-        where: (user, { eq }) => eq(user.email, input.email),
+      const user = await databaseService.user.find_user_by_email({
+        email: input.email,
       });
 
       if (user) {
@@ -93,23 +84,13 @@ class UserController {
       const hash_password = await bcryptService.hash_password(input.password);
       const username = input.email.split("@")[0];
 
-      const create_user = await db
-        .insert(userTable)
-        .values({
-          email: input.email,
-          username,
-          name: input.name,
-          password: hash_password,
-        })
-        .returning();
+      const created_user = await databaseService.user.create_user({
+        ...input,
+        password: hash_password,
+        username,
+      });
 
-      const create_user_preferences = await db
-        .insert(userPreferencesTable)
-        .values({
-          userId: create_user[0].id,
-        });
-
-      const token = jwtService.sign_token({ userId: create_user[0].id });
+      const token = jwtService.sign_token({ userId: created_user.id });
 
       return res
         .status(USER_CREATED_SUCCESSFULLY.code)

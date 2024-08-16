@@ -6,6 +6,19 @@ import { like } from "drizzle-orm";
 import { or } from "drizzle-orm";
 
 export class DatabaseService {
+  private async get_user(input: { userId: string }) {
+    const user = await db
+      .select()
+      .from(schema.userTable)
+      .where(eq(schema.userTable.id, input.userId))
+      .leftJoin(
+        schema.userPreferencesTable,
+        eq(schema.userPreferencesTable.userId, input.userId)
+      );
+
+    return user[0];
+  }
+
   private async find_users_by_username(input: Partial<schema.SelectUser>) {
     const users = await db
       .select()
@@ -32,6 +45,22 @@ export class DatabaseService {
       .update(schema.userTable)
       .set({ lastLoggedIn: new Date() })
       .where(eq(schema.userTable.id, input.id!));
+  }
+
+  private async create_user(input: schema.InsertUser) {
+    const user = await db.transaction(async (tx) => {
+      const user = (
+        await tx.insert(schema.userTable).values(input).returning()
+      )[0];
+
+      await tx.insert(schema.userPreferencesTable).values({
+        userId: user.id,
+      });
+
+      return user;
+    });
+
+    return user;
   }
 
   private async update_user_status(input: { userId: string; status: boolean }) {
@@ -186,10 +215,12 @@ export class DatabaseService {
 
   get user() {
     return {
+      get_user: this.get_user,
       find_users_by_username: this.find_users_by_username,
       find_user_by_email: this.find_user_by_email,
       update_user_last_seen: this.update_user_last_seen,
       update_user_status: this.update_user_status,
+      create_user: this.create_user,
     };
   }
 
