@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { and } from "drizzle-orm";
 import { like } from "drizzle-orm";
 import { or } from "drizzle-orm";
+import { desc } from "drizzle-orm";
+import { ne } from "drizzle-orm";
 
 export class DatabaseService {
   private async get_user(input: { userId: string }) {
@@ -240,6 +242,65 @@ export class DatabaseService {
     return chat[0];
   }
 
+  private async get_user_rooms({ userId }: { userId: string }) {
+    const rooms = await db.transaction(async (tx) => {
+      const user_rooms = await tx
+        .select()
+        .from(schema.userRoomTable)
+        .where(eq(schema.userRoomTable.userId, userId));
+
+      const roomDetails: {
+        room: schema.SelectRoom;
+        chat?: schema.SelectChat | null;
+        member?: {
+          name: string | null;
+          image: string | null;
+          username: string;
+        } | null;
+      }[] = [];
+
+      user_rooms.forEach(async (user_room) => {
+        const room = (
+          await tx
+            .select()
+            .from(schema.roomTable)
+            .where(eq(schema.roomTable.id, user_room.roomId))
+            .leftJoin(
+              schema.userRoomTable,
+              and(
+                eq(schema.userRoomTable.roomId, user_room.roomId),
+                ne(schema.userRoomTable.userId, userId)
+              )
+            )
+            .leftJoin(
+              schema.userTable,
+              eq(schema.userTable.id, schema.userRoomTable.userId)
+            )
+            .leftJoin(
+              schema.chatTable,
+              eq(schema.chatTable.roomId, schema.roomTable.id)
+            )
+            .orderBy(desc(schema.chatTable.createdAt))
+            .limit(1)
+        )[0];
+
+        if (room.rooms.type === "peer") {
+          roomDetails.push({
+            room: room.rooms,
+            chat: room.chats,
+            member: room.users,
+          });
+        } else {
+          roomDetails.push({ room: room.rooms, chat: room.chats });
+        }
+      });
+
+      return roomDetails;
+    });
+
+    return rooms;
+  }
+
   get room() {
     return {
       create_room: this.create_room,
@@ -265,6 +326,7 @@ export class DatabaseService {
       create_user_room: this.create_user_room,
       get_user_room: this.get_user_room,
       delete_user_room: this.delete_user_room,
+      get_user_rooms: this.get_user_rooms,
     };
   }
 

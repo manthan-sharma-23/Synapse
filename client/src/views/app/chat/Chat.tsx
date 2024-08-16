@@ -87,7 +87,7 @@ const Chat = ({ socket }: { socket: Socket }) => {
             <GoPaperclip className="text-orange-600 cursor-pointer h-6 w-6 " />
             <TbSend2
               onClick={sendChatToRoom}
-              className="text-orange-600 cursor-pointer rounded-md bg-orange-200/60 h-10 w-10 p-[4px]"
+              className="text-red-500 cursor-pointer rounded-md bg-orange-200/40 h-9 w-9 p-[4px]"
             />
           </div>
         </div>

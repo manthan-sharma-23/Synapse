@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Avvvatars from "avvvatars-react";
 import { useNavigate } from "react-router-dom";
 import Chat from "./chat/Chat";
+import UserRoomsDisplay from "@/components/utilities/UserRoomsDisplay";
 
 const Home = () => {
   const [username, setUsername] = useState("");
@@ -131,6 +132,10 @@ const Home = () => {
               )}
             </Card>
           )}
+        </div>
+        <div className="h-[5%] w-full border">FILTERS</div>
+        <div className="h-[85%] w-full">
+          <UserRoomsDisplay />
         </div>
       </div>
       <div className="h-full w-2/3">{socket && <Chat socket={socket} />}</div>

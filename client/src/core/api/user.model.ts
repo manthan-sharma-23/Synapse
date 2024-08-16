@@ -2,6 +2,7 @@ import axios from "axios";
 import { configurations } from "../lib/config/config";
 import { AuthenticateUser, LoggedUser } from "../lib/types/auth.types";
 import { GetUserQuery } from "../lib/types/query.types";
+import { UserRoomList } from "../lib/types/global.types";
 
 class UserModel {
   private base_url: string;
@@ -51,6 +52,18 @@ class UserModel {
       return { ...data, isLoggedIn: true };
     }
     return { ...data, isLoggedIn: false };
+  };
+
+  get_user_rooms = async () => {
+    const data = (
+      await axios.get(this.base_url + "/get-user-rooms", {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as UserRoomList[];
+
+    return data;
   };
 
   get user() {

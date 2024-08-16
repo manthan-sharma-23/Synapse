@@ -67,6 +67,19 @@ class UserController {
     }
   }
 
+  async get_user_rooms(req: Request, res: Response) {
+    try {
+      const { userId } = req.user;
+
+      const rooms = await databaseService.userRoom.get_user_rooms({ userId });
+
+      return res.status(200).json(rooms);
+    } catch (error) {
+      console.log("ERROR :: ", error);
+      return res.sendStatus(500);
+    }
+  }
+
   async register_user(req: Request, res: Response) {
     try {
       const input = UserValidator.parse(req.body);
