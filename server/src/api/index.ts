@@ -4,7 +4,7 @@ import bodyParser from "body-parser";
 import morgan from "morgan";
 import userRouter from "./user-model/user.routes";
 import roomRouter from "./room-model/room.routes";
-import chatRouter from "./user-model/user.routes";
+import inviteRouter from "./invite-model/invite.routes";
 
 const api = (app: Express) => {
   app
@@ -16,7 +16,7 @@ const api = (app: Express) => {
     .use(bodyParser.urlencoded({ extended: true, limit: "50mb" }))
     .use("/api/user", userRouter)
     .use("/api/room", roomRouter)
-    .use("/api/chat", chatRouter);
+    .use("/api/invite", inviteRouter);
 
   return app;
 };

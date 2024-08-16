@@ -39,6 +39,9 @@ export const roomTable = pgTable("rooms", {
   type: varchar("type").notNull().$type<"peer" | "group">(),
   name: varchar("name", { length: 20 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdBy: uuid("created_by").references(() => userTable.id, {
+    onDelete: "no action",
+  }),
 });
 
 export const userRoomTable = pgTable(
@@ -72,7 +75,7 @@ export const chatTable = pgTable("chats", {
     .references(() => userTable.id, { onDelete: "cascade" }),
 });
 
-export const groupInvite = pgTable("group_invites", {
+export const groupInviteTable = pgTable("group_invites", {
   id: uuid("id").primaryKey().defaultRandom(),
   roomId: uuid("room_id")
     .notNull()
@@ -84,6 +87,10 @@ export const groupInvite = pgTable("group_invites", {
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  status: varchar("status")
+    .notNull()
+    .$type<"accepted" | "rejected" | "pending">()
+    .default("pending"),
 });
 
 export type InsertRoom = typeof roomTable.$inferInsert;
@@ -98,5 +105,5 @@ export type SelectUser = typeof userTable.$inferSelect;
 export type InsertChat = typeof chatTable.$inferInsert;
 export type SelectChat = typeof chatTable.$inferSelect;
 
-export type SelectGroupInvite = typeof groupInvite.$inferSelect;
-export type InsertGroupInvite = typeof groupInvite.$inferInsert;
+export type SelectGroupInvite = typeof groupInviteTable.$inferSelect;
+export type InsertGroupInvite = typeof groupInviteTable.$inferInsert;

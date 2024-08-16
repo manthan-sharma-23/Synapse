@@ -78,8 +78,21 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
 };
 
 const UserGroupBox = ({ userRoom }: { userRoom: UserRoomList }) => {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const roomId = params.get("roomId");
+
   return (
-    <div className="flex px-6 py-4">
+    <div
+      onClick={() => {
+        const params = new URLSearchParams({ roomId: userRoom.room.id });
+        navigate(`/?${params}`);
+      }}
+      className={twMerge(
+        "flex px-6  py-5 border-b items-center justify-start gap-5 cursor-pointer hover:bg-shade",
+        userRoom.room.id === roomId && "bg-shade"
+      )}
+    >
       <Avatar className="h-[3rem] w-[3rem]">
         <Avvvatars
           value={userRoom.room.name || userRoom.room.id}
@@ -87,6 +100,19 @@ const UserGroupBox = ({ userRoom }: { userRoom: UserRoomList }) => {
           size={50}
         />
       </Avatar>
+      <div className="h-full w-auto flex flex-col items-start justify-center">
+        <div className="flex gap-2 items-center justify-start">
+          <p className="text-lg font-medium">
+            {userRoom.room.name || userRoom.room.id}
+          </p>
+          {userRoom.chat && (
+            <p className="text-sm text-gray-500 font-medium">
+              {moment(userRoom.chat.createdAt).fromNow()}
+            </p>
+          )}
+        </div>
+        {userRoom.chat && <p>{userRoom.chat.text}</p>}
+      </div>
     </div>
   );
 };

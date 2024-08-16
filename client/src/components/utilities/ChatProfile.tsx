@@ -12,7 +12,7 @@ const ChatProfile = ({
   if (roomDetails.room.type === "peer") {
     return <PeerBanner peer={roomDetails.users[0]} event={event} />;
   }
-  return <GroupBanner group={roomDetails} />;
+  return <GroupBanner group={roomDetails} event={event} />;
 };
 
 export default ChatProfile;

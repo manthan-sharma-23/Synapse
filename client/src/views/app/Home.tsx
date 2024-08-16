@@ -8,17 +8,16 @@ import { BiSearchAlt } from "react-icons/bi";
 import clsx from "clsx";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Avvvatars from "avvvatars-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Chat from "./chat/Chat";
 import UserRoomsDisplay from "@/components/utilities/UserRoomsDisplay";
 import { socket } from "@/socket";
+import CreateGroupButton from "@/components/utilities/CreateGroup";
+import Notifications from "@/components/utilities/Notifications";
 
 const Home = () => {
   const [username, setUsername] = useState("");
   const navigate = useNavigate();
-
-  const [params] = useSearchParams();
-  const roomId = params.get("roomId");
 
   const user = useRecoilValue(UserSelector);
   const [resultedUsers, setResultedUsers] = useState<IUser[]>([]);
@@ -38,7 +37,7 @@ const Home = () => {
 
       socket.disconnect();
     };
-  }, [user, roomId]);
+  }, [user]);
 
   useEffect(() => {
     searchUsername();
@@ -143,7 +142,12 @@ const Home = () => {
             )}
           </div>
         </div>
-        <div className="h-[7%] w-full border-y"></div>
+        <div className="h-[7%] w-full border-y flex justify-between items-center px-6">
+          <div className="flex gap-2 h-full items-center">
+            <Notifications />
+            <CreateGroupButton />
+          </div>
+        </div>
         <div className="h-[83%] w-full">
           <UserRoomsDisplay />
         </div>

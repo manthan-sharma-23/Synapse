@@ -301,6 +301,38 @@ export class DatabaseService {
     return rooms;
   }
 
+  private async create_group_invite(input: schema.InsertGroupInvite) {
+    const invite = (
+      await db.insert(schema.groupInviteTable).values(input).returning()
+    )[0];
+    return invite;
+  }
+
+  private async list_user_invites(input: { userId: string }) {
+    const invites = await db
+      .select()
+      .from(schema.groupInviteTable)
+      .where(eq(schema.groupInviteTable.userId, input.userId))
+      .innerJoin(
+        schema.roomTable,
+        and(
+          eq(schema.roomTable.type, "group"),
+          eq(schema.roomTable.id, schema.groupInviteTable.roomId)
+        )
+      )
+      .orderBy(desc(schema.groupInviteTable.createdAt));
+
+    return invites;
+  }
+
+  private async add_group_member(input: schema.InsertUserRoom) {
+    const user_room = (
+      await db.insert(schema.userRoomTable).values(input).returning()
+    )[0];
+
+    return user_room;
+  }
+
   get room() {
     return {
       create_room: this.create_room,
@@ -334,6 +366,19 @@ export class DatabaseService {
     return {
       get_room_chats: this.get_room_chats,
       add_chat_to_room: this.add_chat_to_room,
+    };
+  }
+
+  get invites() {
+    return {
+      create_group_invite: this.create_group_invite,
+      list_user_invites: this.list_user_invites,
+    };
+  }
+
+  get group() {
+    return {
+      add_group_member: this.add_group_member,
     };
   }
 }

@@ -1,32 +1,33 @@
-// User interface
+// User Interface
 export interface IUser {
   id: string;
-  name?: string | null;
+  name?: string;
   email: string;
   username: string;
   password: string;
-  image?: string | null;
+  image?: string;
   createdAt: Date;
   status: boolean;
   lastLoggedIn: Date;
 }
 
-// User Preferences interface
+// User Preferences Interface
 export interface IUserPreferences {
   id: string;
   theme: string;
   userId: string;
 }
 
-// Room interface
+// Room Interface
 export interface IRoom {
   id: string;
   type: "peer" | "group";
   name?: string;
   createdAt: Date;
+  createdBy?: string;
 }
 
-// UserRoom interface (relationship between users and rooms)
+// UserRoom Interface
 export interface IUserRoom {
   id: string;
   userId: string;
@@ -34,18 +35,33 @@ export interface IUserRoom {
   joinedAt: Date;
 }
 
-// Chat interface
+// Chat Interface
 export interface IChat {
   id: string;
+  text?: string;
   type: "text" | "image" | "video";
-  url?: string | null;
+  url?: string;
   createdAt: Date;
   roomId: string;
   userId: string;
-  text?: string;
+}
+
+// GroupInvite Interface
+export interface IGroupInvite {
+  id: string;
+  roomId: string;
+  userId: string;
+  createdBy: string;
+  createdAt: Date;
+  status: "accepted" | "rejected" | "pending";
 }
 
 export interface IRoomDetails {
   room: IRoom;
   users: IUser[];
+}
+
+export interface IUserInvites {
+  rooms: IRoom;
+  group_invites: IGroupInvite;
 }
