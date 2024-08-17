@@ -5,6 +5,10 @@ import db from "../../db/database.service";
 import { SelectUser } from "../../db";
 import databaseService from "../../db/database.service";
 import s3Service from "./s3.service";
+import { createAdapter } from "@socket.io/redis-adapter";
+
+const pubClient = new RedisService().client;
+const subClient = pubClient.duplicate();
 
 interface SocketCallback {
   (response: any): void;
@@ -22,6 +26,7 @@ export default class SocketService {
       cors: {
         origin: "*",
       },
+      adapter: createAdapter(pubClient, subClient),
     });
     this.listenEvents(this.io);
   }
