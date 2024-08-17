@@ -6,6 +6,7 @@ import { SelectUser } from "../../db";
 import databaseService from "../../db/database.service";
 import s3Service from "./s3.service";
 import { createAdapter } from "@socket.io/redis-adapter";
+import { ConferenceService } from "./conferencing-services/conference.service";
 
 const pubClient = new RedisService().client;
 const subClient = pubClient.duplicate();
@@ -28,6 +29,7 @@ export default class SocketService {
       },
       adapter: createAdapter(pubClient, subClient),
     });
+    new ConferenceService(this.io);
     this.listenEvents(this.io);
   }
 
