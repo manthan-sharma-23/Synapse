@@ -5,6 +5,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import db from "../../db/database.service";
 import { SelectUser } from "../../db";
 import databaseService from "../../db/database.service";
+import s3Service from "./s3.service";
 
 const pubClient = new RedisService().client;
 const subClient = pubClient.duplicate();
@@ -79,13 +80,18 @@ export default class SocketService {
         const { user, roomId, message } = data as {
           user: { user: SelectUser };
           roomId: string;
-          message: { text: string; type: string };
+          message: {
+            url?: string;
+            text?: string;
+            type: "text" | "image" | "video";
+          };
         };
         const chat = await db.chats.add_chat_to_room({
           userId: user.user.id,
           roomId: roomId,
-          type: "text",
-          text: message.text,
+          type: message.type,
+          text: message.text || null,
+          url: message.url || null,
         });
 
         socket.to(roomId).emit("user:message", chat);
@@ -93,6 +99,21 @@ export default class SocketService {
 
         redisService.update_room_chats({ chat, roomId });
       });
+
+      socket.on(
+        "event:file",
+        async ({ userId, roomId, fileName }, cb: SocketCallback) => {
+          const data = await s3Service.generate_presigned_url({
+            userId,
+            roomId,
+            fileName,
+          });
+
+          cb(data);
+
+          return;
+        }
+      );
 
       socket.on("event:user-leave-room", ({ roomId }) => {
         console.log("\nLEFT ROOM\n", roomId);

@@ -64,7 +64,20 @@ const ChatBox = ({
             : "bg-gray-200 text-black rounded-tl-md"
         )}
       >
-        <p className="text">{chat.text}</p>
+        {chat.type === "text" && <p className="text">{chat.text}</p>}
+        {chat.type === "image" && (
+          <img
+            src={chat.url}
+            alt="Shared content"
+            className="rounded-lg h-[25vh] w-[20vw]"
+          />
+        )}
+        {chat.type === "video" && (
+          <video controls className="rounded-lg h-[30vh]">
+            <source src={chat.url} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        )}
         <p
           className={twMerge(
             "text-[13px] mt-1.5",

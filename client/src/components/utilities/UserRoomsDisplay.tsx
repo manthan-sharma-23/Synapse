@@ -7,6 +7,8 @@ import Avvvatars from "avvvatars-react";
 import moment from "moment";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
+import { FaFileImage } from "react-icons/fa";
+import { FaFileVideo } from "react-icons/fa";
 
 const UserRoomsDisplay = () => {
   const { userRooms, loading } = useGetUserRooms();
@@ -111,7 +113,21 @@ const UserGroupBox = ({ userRoom }: { userRoom: UserRoomList }) => {
             </p>
           )}
         </div>
-        {userRoom.chat && <p>{userRoom.chat.text}</p>}
+        {userRoom.chat && userRoom.chat.type === "text" && (
+          <p>{userRoom.chat.text}</p>
+        )}
+        {userRoom.chat && userRoom.chat.type === "image" && (
+          <div className="flex gap-1 justify-start items-center text-gray-700">
+            <FaFileImage />
+            Image
+          </div>
+        )}
+        {userRoom.chat && userRoom.chat.type === "video" && (
+          <div className="flex gap-1 justify-start items-center text-gray-700">
+            <FaFileVideo />
+            Video
+          </div>
+        )}
       </div>
     </div>
   );

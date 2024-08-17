@@ -8,11 +8,12 @@ import { GoPaperclip } from "react-icons/go";
 import React, { useEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { UserAtom } from "@/core/store/atom/user.atom";
-
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ChatsDisplay from "@/components/utilities/ChatsDisplay";
 import { RoomChats } from "@/core/lib/types/global.types";
 import { ChatAtom } from "@/core/store/atom/chat.atom";
 import { socket } from "@/socket";
+import SelectImageOrVideo from "@/components/utilities/SelectImageOrVideo";
 
 const Chat = () => {
   const { roomDetails, loading, roomId } = useGetRoomDetails();
@@ -46,6 +47,9 @@ const Chat = () => {
   }
 
   const sendChatToRoom = () => {
+    if (text.length <= 0) {
+      return;
+    }
     const message = {
       text,
       type: "text",
@@ -80,7 +84,14 @@ const Chat = () => {
             placeholder="Type your message here"
           />
           <div className="h-full w-[7rem] flex items-center justify-around text-2xl">
-            <GoPaperclip className="text-orange-600 cursor-pointer h-6 w-6 " />
+            <Dialog>
+              <DialogTrigger>
+                <GoPaperclip className="text-orange-600 cursor-pointer h-6 w-6 " />
+              </DialogTrigger>
+              <DialogContent>
+                <SelectImageOrVideo />
+              </DialogContent>
+            </Dialog>
             <TbSend2
               onClick={sendChatToRoom}
               className="text-red-500 cursor-pointer rounded-md bg-orange-200/40 h-9 w-9 p-[4px]"

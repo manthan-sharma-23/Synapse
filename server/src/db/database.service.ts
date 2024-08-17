@@ -274,9 +274,19 @@ export class DatabaseService {
   private async get_user_rooms({ userId }: { userId: string }) {
     const rooms = await db.transaction(async (tx) => {
       const user_rooms = await tx
-        .select()
+        .select({
+          id: schema.userRoomTable.id,
+          userId: schema.userRoomTable.userId,
+          roomId: schema.userRoomTable.roomId,
+          joinedAt: schema.userRoomTable.joinedAt,
+        })
         .from(schema.userRoomTable)
-        .where(eq(schema.userRoomTable.userId, userId));
+        .where(eq(schema.userRoomTable.userId, userId))
+        .leftJoin(
+          schema.chatTable,
+          eq(schema.chatTable.roomId, schema.userRoomTable.id)
+        )
+        .orderBy(desc(schema.chatTable.createdAt));
 
       const roomDetails: {
         room: schema.SelectRoom;
