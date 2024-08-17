@@ -1,5 +1,7 @@
+import { AppData } from "mediasoup/node/lib/types";
 import { config } from "../../config/mediasoup";
 import * as mediasoup from "mediasoup";
+import { Worker } from "mediasoup/node/lib/Worker";
 
 let workers: Worker[] = [];
 export let nextMediasoupWorkerIdx = 0;
@@ -20,7 +22,7 @@ export async function createWorkers() {
       );
       setTimeout(() => process.exit(1), 2000);
     });
-    //@ts-ignore
+
     workers.push(worker);
   }
 }
