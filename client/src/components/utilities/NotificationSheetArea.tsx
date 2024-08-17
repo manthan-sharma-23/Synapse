@@ -37,6 +37,14 @@ const NotificationSheetArea = () => {
     })) as { room: IRoom; invite: IGroupInvite };
 
     if (res) {
+      setInvites(
+        invites.map((invite) => {
+          if (invite.invite.id === inviteId) {
+            invite.invite.status = "accepted";
+          }
+          return invite;
+        })
+      );
       const params = new URLSearchParams({ roomId: res.room.id });
       navigate(`/?${params}`);
     }
@@ -62,13 +70,13 @@ const NotificationSheetArea = () => {
   };
 
   return (
-    <div className="h-full w-full mt-5 overflow-y-scroll custom-scrollbar pr-3">
+    <div className="h-full w-full mt-5 overflow-y-scroll custom-scrollbar pr-3 ">
       {invites &&
         invites.map((invite) => {
           return (
             <div
               key={invite.invite.id}
-              className="h-[20vh] w-full border p-3 px-5 rounded-lg flex items-start flex-col justify-center gap-2"
+              className="my-2 h-[20vh] w-full border p-3 px-5 rounded-lg flex items-start flex-col justify-center gap-2"
             >
               <p className="font-semibold font-poppins text-3xl">
                 {invite.group.name}

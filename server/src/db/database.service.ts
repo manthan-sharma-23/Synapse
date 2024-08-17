@@ -331,9 +331,30 @@ export class DatabaseService {
   }
 
   private async create_group_invite(input: schema.InsertGroupInvite) {
-    const invite = (
-      await db.insert(schema.groupInviteTable).values(input).returning()
-    )[0];
+    const invite = await db.transaction(async (tx) => {
+      const invite_ = (
+        await tx
+          .select()
+          .from(schema.groupInviteTable)
+          .where(
+            and(
+              eq(schema.groupInviteTable.roomId, input.roomId),
+              eq(schema.groupInviteTable.userId, input.userId),
+              eq(schema.groupInviteTable.status, "pending")
+            )
+          )
+          .limit(1)
+      )[0];
+      if (invite_) {
+        return invite_;
+      }
+
+      const invite = (
+        await tx.insert(schema.groupInviteTable).values(input).returning()
+      )[0];
+
+      return invite;
+    });
     return invite;
   }
 
@@ -403,6 +424,13 @@ export class DatabaseService {
           .from(schema.roomTable)
           .where(and(eq(schema.roomTable.id, invite.roomId)))
       )[0];
+
+      if (input.status === "accepted") {
+        await tx.insert(schema.userRoomTable).values({
+          roomId: invite.roomId,
+          userId: invite.userId,
+        });
+      }
 
       return { invite, room };
     });
