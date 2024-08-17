@@ -6,6 +6,7 @@ import InviteUserToGroup from "./InviteUserToGroup";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
 import RoomExpandedDetails from "./RoomExpandedDetails";
+import Conference from "@/views/app/conference/conference";
 
 const GroupBanner = ({
   group,
@@ -27,7 +28,7 @@ const GroupBanner = ({
               />
             </Avatar>
           </DialogTrigger>
-          <DialogContent >
+          <DialogContent>
             <RoomExpandedDetails />
           </DialogContent>
         </Dialog>
@@ -46,7 +47,8 @@ const GroupBanner = ({
           </div>
         </div>
       </div>
-      <div>
+      <div className="flex gap-5 items-center justify-center">
+        <Conference />
         <InviteUserToGroup />
       </div>
     </div>
