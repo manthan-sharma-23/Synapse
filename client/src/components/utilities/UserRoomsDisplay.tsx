@@ -17,11 +17,14 @@ const UserRoomsDisplay = () => {
 
   useEffect(() => {
     socket.on("block:update", (data: UserRoomList) => {
-      data.new = true;
-      setUserRooms((v) => [
-        data,
-        ...v.filter((v) => v.room.id !== data.room.id),
-      ]);
+      setUserRooms((v) =>
+        v.map((value) => {
+          if (value.room.id === data.room.id) {
+            return { ...value, chat: data.chat, new: true };
+          }
+          return value;
+        })
+      );
     });
   }, []);
 

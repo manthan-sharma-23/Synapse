@@ -37,7 +37,7 @@ const PeerBanner = ({
         </div>
         <div className="text-sm text-black/55 font-medium">
           {event ? (
-            <Badge variant="outline">{event}</Badge>
+            <Badge variant="outline">Typing...</Badge>
           ) : (
             <Badge variant="default">
               {peer.status ? (

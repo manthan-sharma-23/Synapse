@@ -1,14 +1,10 @@
 import * as io from "socket.io";
 import * as http from "http";
 import RedisService, { redisService } from "./redis.service";
-import { createAdapter } from "@socket.io/redis-adapter";
 import db from "../../db/database.service";
 import { SelectUser } from "../../db";
 import databaseService from "../../db/database.service";
 import s3Service from "./s3.service";
-
-const pubClient = new RedisService().client;
-const subClient = pubClient.duplicate();
 
 interface SocketCallback {
   (response: any): void;
@@ -26,7 +22,6 @@ export default class SocketService {
       cors: {
         origin: "*",
       },
-      adapter: createAdapter(pubClient, subClient),
     });
     this.listenEvents(this.io);
   }

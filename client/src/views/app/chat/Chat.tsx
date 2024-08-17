@@ -6,7 +6,7 @@ import { useGetRoomDetails } from "@/core/hooks/useGetRoomDetails";
 import { TbSend2 } from "react-icons/tb";
 import { GoPaperclip } from "react-icons/go";
 import React, { useEffect, useState } from "react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import { UserAtom } from "@/core/store/atom/user.atom";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ChatsDisplay from "@/components/utilities/ChatsDisplay";
@@ -21,7 +21,7 @@ const Chat = () => {
   const user = useRecoilValue(UserAtom);
   const [event, setEvent] = useState<string | null>(null);
   const [text, setText] = useState("");
-  const setChatsInBox = useSetRecoilState(ChatAtom);
+  const [chatBox, setChatsInBox] = useRecoilState(ChatAtom);
   const setUserRooms = useSetRecoilState(UserRoomsListAtom);
 
   useEffect(() => {
@@ -42,24 +42,34 @@ const Chat = () => {
   }, [roomId]);
 
   useEffect(() => {
-    if (socket) {
-      socket.emit("join:room", { roomId });
+    socket.emit("join:room", { roomId });
 
-      socket.on("user:typing", (message) => {
-        setEvent(message);
-      });
+    const handleTyping = (message: string) => {
+      setEvent(message);
+    };
 
-      socket.on("user:stop-typing", () => {
-        setEvent(null);
-      });
+    const handleStopTyping = () => {
+      setEvent(null);
+    };
 
-      socket.on("user:message", (data) => {
-        const chat = data as RoomChats;
-
+    const handleMessage = (data: RoomChats) => {
+      const chat = data;
+      if (!chatBox.includes(chat)) {
         setChatsInBox((v) => [...v, chat]);
-      });
-    }
-  }, []);
+      }
+    };
+
+    socket.on("user:typing", handleTyping);
+    socket.on("user:stop-typing", handleStopTyping);
+    socket.on("user:message", handleMessage);
+
+    return () => {
+      socket.emit("event:user-leave-room", { roomId });
+      socket.off("user:typing", handleTyping);
+      socket.off("user:stop-typing", handleStopTyping);
+      socket.off("user:message", handleMessage);
+    };
+  }, [roomId]);
 
   useEffect(() => {
     let typingTimeout: NodeJS.Timeout | null = null;

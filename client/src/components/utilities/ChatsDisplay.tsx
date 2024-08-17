@@ -2,21 +2,10 @@ import { useGetRoomChats } from "@/core/hooks/useGetRoomChats";
 import NoConversationWindow from "../pages/NoConversationWindow";
 import LoadingPage from "../pages/LoadingPage";
 import PeerChat from "./PeerChat";
-import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { socket } from "@/socket";
 import GroupChat from "./GroupChat";
 
 const ChatsDisplay = ({ type }: { type: "peer" | "group" }) => {
   const { chats, loading } = useGetRoomChats();
-  const [params] = useSearchParams();
-  const roomId = params.get("roomId");
-
-  useEffect(() => {
-    return () => {
-      socket?.emit("event:user-leave-room", { roomId });
-    };
-  }, [params, roomId]);
 
   if (!chats) {
     return <div>Error</div>;
