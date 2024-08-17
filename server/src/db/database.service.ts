@@ -7,6 +7,8 @@ import { or } from "drizzle-orm";
 import { desc } from "drizzle-orm";
 import { ne } from "drizzle-orm";
 import { notInArray } from "drizzle-orm";
+import { count } from "drizzle-orm";
+import { asc } from "drizzle-orm";
 
 export class DatabaseService {
   private async get_user(input: { userId: string }) {
@@ -121,6 +123,15 @@ export class DatabaseService {
     )[0];
 
     return room;
+  }
+
+  private async number_of_members_in_room(input: { roomId: string }) {
+    const number = await db
+      .select({ count: count() })
+      .from(schema.userRoomTable)
+      .where(eq(schema.userRoomTable.roomId, input.roomId));
+
+    return number[0].count;
   }
 
   private find_room_for_peers = async (input: {
@@ -442,6 +453,55 @@ export class DatabaseService {
     return invites;
   }
 
+  private async room_details_expanded(input: { roomId: string }) {
+    const details = await db.transaction(async (tx) => {
+      const groupInfo = (
+        await tx
+          .select()
+          .from(schema.roomTable)
+          .where(eq(schema.roomTable.id, input.roomId))
+          .limit(1)
+      )[0];
+
+      const users = await tx
+        .select({
+          id: schema.userTable.id,
+          name: schema.userTable.name,
+          username: schema.userTable.username,
+          email: schema.userTable.email,
+          image: schema.userTable.image,
+          status: schema.userTable.status,
+          lastLoggedIn: schema.userTable.lastLoggedIn,
+          roomId: schema.userRoomTable.roomId,
+          userRoomId: schema.userRoomTable.id,
+        })
+        .from(schema.userRoomTable)
+        .where(eq(schema.userRoomTable.roomId, input.roomId))
+        .innerJoin(
+          schema.userTable,
+          eq(schema.userRoomTable.userId, schema.userTable.id)
+        )
+        .orderBy(asc(schema.userRoomTable.joinedAt));
+
+      const media = await tx
+        .select()
+        .from(schema.chatTable)
+        .where(
+          and(
+            eq(schema.chatTable.roomId, input.roomId),
+            or(
+              eq(schema.chatTable.type, "image"),
+              eq(schema.chatTable.type, "video")
+            )
+          )
+        );
+
+      return { users, media, room: groupInfo };
+    });
+
+    return details;
+  }
+
   private async add_group_member(input: schema.InsertUserRoom) {
     const user_room = (
       await db.insert(schema.userRoomTable).values(input).returning()
@@ -492,6 +552,8 @@ export class DatabaseService {
       get_room_details: this.get_room_details,
       list_all_users_not_in_room: this.list_all_users_not_in_room,
       list_all_room_users: this.list_all_room_users,
+      number_of_members_in_room: this.number_of_members_in_room,
+      room_details_expanded: this.room_details_expanded,
     };
   }
 

@@ -11,12 +11,27 @@ import { useRecoilValue } from "recoil";
 import { twMerge } from "tailwind-merge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Avvvatars from "avvvatars-react";
+import { useEffect, useRef } from "react";
+
 
 const GroupChat = ({ chats }: { chats: RoomChats[] }) => {
   const messages = bundleMessagesByUser(chats);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth", // adds smooth scrolling
+      });
+    }
+  }, [chats]);
 
   return (
-    <div className="h-full w-full overflow-y-scroll px-4 custom-scrollbar space-y-4 py-1">
+    <div
+      ref={chatContainerRef}
+      className="h-full w-full overflow-y-scroll px-4 custom-scrollbar space-y-4 py-1"
+    >
       {messages &&
         messages.map((message, index) => (
           <MessageBundleBox key={index} message={message} />

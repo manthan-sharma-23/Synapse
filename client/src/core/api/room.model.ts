@@ -1,7 +1,7 @@
 import axios from "axios";
 import { configurations } from "../lib/config/config";
 import { IRoomDetails } from "../lib/types/schema";
-import { RoomChats } from "../lib/types/global.types";
+import { RoomChats, RoomExpandedDetails } from "../lib/types/global.types";
 
 class RoomModel {
   private base_url: string;
@@ -37,6 +37,22 @@ class RoomModel {
         },
       })
     ).data as RoomChats[];
+
+    return res;
+  }
+
+  async get_room_details_n_media(input: { roomId?: string }) {
+    if (!input.roomId) {
+      return;
+    }
+
+    const res = (
+      await axios.get(this.base_url + `/media/${input.roomId}`, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as RoomExpandedDetails;
 
     return res;
   }

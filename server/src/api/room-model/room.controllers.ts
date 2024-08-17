@@ -23,7 +23,11 @@ class RoomController {
         }
       });
 
-      return res.status(200).json({ room, users });
+      const count = await databaseService.room.number_of_members_in_room({
+        roomId,
+      });
+
+      return res.status(200).json({ room, users, count });
     } catch (error) {
       console.log(error);
       return res.sendStatus(500);
@@ -45,6 +49,20 @@ class RoomController {
       await redisService.set_room_chats({ chats, roomId });
 
       return res.status(200).json(chats);
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
+
+  async get_room_media_n_users(req: Request, res: Response) {
+    try {
+      const { roomId } = req.params;
+      const details = await databaseService.room.room_details_expanded({
+        roomId,
+      });
+
+      return res.status(200).json(details);
     } catch (error) {
       console.log(error);
       return res.sendStatus(500);

@@ -10,6 +10,7 @@ router
     AuthenticationMiddleware,
     RoomControllers.get_room_chats
   )
+  .get("/media/:roomId",AuthenticationMiddleware,RoomControllers.get_room_media_n_users)
   .get("/:roomId", AuthenticationMiddleware, RoomControllers.get_room_details);
 
 export default router;

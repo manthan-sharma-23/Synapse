@@ -71,7 +71,16 @@ export default class SocketService {
 
       // events
       socket.on("event:typing", ({ roomId, user }) => {
-        // socket.to(roomId).emit("user:typing", `${user.name} is typing...`);
+        socket
+          .to(roomId)
+          .emit(
+            "user:typing",
+            `${user.name.split(" ")[0] || user.username} is typing...`
+          );
+      });
+
+      socket.on("event:stop-typing", ({ roomId, user }) => {
+        socket.to(roomId).emit("user:stop-typing", user);
       });
 
       socket.on("event:message", async (data) => {
@@ -108,10 +117,6 @@ export default class SocketService {
         const users = await databaseService.room.list_all_room_users({
           roomId,
         });
-
-        console.log("TO RELAY ::: ", this.user_map, users, room_card);
-
-        // relay new block card to all the users
         users.forEach((user) => {
           const socketId = this.isUserOnline(user.userId);
 

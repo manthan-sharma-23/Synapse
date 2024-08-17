@@ -19,7 +19,7 @@ import { UserRoomsListAtom } from "@/core/store/atom/user-room.atom";
 const Chat = () => {
   const { roomDetails, loading, roomId } = useGetRoomDetails();
   const user = useRecoilValue(UserAtom);
-  const [event] = useState<string | null>(null);
+  const [event, setEvent] = useState<string | null>(null);
   const [text, setText] = useState("");
   const setChatsInBox = useSetRecoilState(ChatAtom);
   const setUserRooms = useSetRecoilState(UserRoomsListAtom);
@@ -45,8 +45,12 @@ const Chat = () => {
     if (socket) {
       socket.emit("join:room", { roomId });
 
-      socket.on("user:typing", (data) => {
-        console.log(data);
+      socket.on("user:typing", (message) => {
+        setEvent(message);
+      });
+
+      socket.on("user:stop-typing", () => {
+        setEvent(null);
       });
 
       socket.on("user:message", (data) => {
@@ -56,6 +60,29 @@ const Chat = () => {
       });
     }
   }, []);
+
+  useEffect(() => {
+    let typingTimeout: NodeJS.Timeout | null = null;
+
+    if (text.trim() !== "") {
+      socket.emit("event:typing", { roomId, user: user?.user });
+
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
+      typingTimeout = setTimeout(() => {
+        socket.emit("event:stop-typing", { roomId, user: user?.user });
+      }, 3000);
+    } else {
+      socket.emit("event:stop-typing", { roomId, user: user?.user });
+    }
+
+    return () => {
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
+    };
+  }, [text, user, roomId]);
 
   if (!roomDetails) {
     return <NoChatWindow />;

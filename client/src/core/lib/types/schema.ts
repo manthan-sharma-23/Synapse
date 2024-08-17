@@ -59,6 +59,7 @@ export interface IGroupInvite {
 export interface IRoomDetails {
   room: IRoom;
   users: IUser[];
+  count: number;
 }
 
 export interface IUserInvites {

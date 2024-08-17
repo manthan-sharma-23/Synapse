@@ -20,6 +20,7 @@ const SelectImageOrVideo = () => {
   const user = useRecoilValue(UserSelector);
   const [params] = useSearchParams();
   const roomId = params.get("roomId");
+  const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -43,6 +44,7 @@ const SelectImageOrVideo = () => {
     }
 
     try {
+      setLoading(true);
       const response = (await sendRequestToSocket("event:file", {
         roomId,
         userId: user.id,
@@ -60,6 +62,12 @@ const SelectImageOrVideo = () => {
             "Content-Type": response.contentType,
           },
         });
+        let messageType: "image" | "video" = "image";
+        if (response.contentType.startsWith("video/")) {
+          messageType = "video";
+        } else if (response.contentType.startsWith("image/")) {
+          messageType = "image";
+        }
 
         const event_data: {
           user: { user: IUser };
@@ -76,18 +84,22 @@ const SelectImageOrVideo = () => {
           roomId,
           message: {
             url: response.url,
-            type: response.contentType.split("/")[0],
+            type: messageType,
           },
         };
 
         socket.emit("event:message", event_data);
         toast.success("File uploaded successfully!");
+        setFile(null);
+        setLoading(false);
       } else {
         toast.error("Failed to get the pre-signed URL.");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error during file upload:", error);
       toast.error("An error occurred during the file upload.");
+      setLoading(false);
     }
   };
 
@@ -99,6 +111,7 @@ const SelectImageOrVideo = () => {
       <div className="h-full w-full flex flex-col items-center justify-center">
         <div className="h-[25vh] w-full my-3 flex justify-center items-center">
           <Input
+            disabled={loading}
             multiple={false}
             onChange={handleFileChange}
             type="file"
@@ -110,11 +123,10 @@ const SelectImageOrVideo = () => {
           <div className="my-2 text-center">
             <p>Selected file: {file.name}</p>
             <p>Size: {formatFileSize(file.size)} MB</p>
- 
           </div>
         )}
         <div className="w-full h-auto flex justify-end items-center">
-          <Button size="sm" onClick={handleUpload}>
+          <Button disabled={loading} size="sm" onClick={handleUpload}>
             Upload
           </Button>
         </div>
