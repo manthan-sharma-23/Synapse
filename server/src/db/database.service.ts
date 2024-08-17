@@ -6,6 +6,7 @@ import { like } from "drizzle-orm";
 import { or } from "drizzle-orm";
 import { desc } from "drizzle-orm";
 import { ne } from "drizzle-orm";
+import { notInArray } from "drizzle-orm";
 
 export class DatabaseService {
   private async get_user(input: { userId: string }) {
@@ -47,6 +48,34 @@ export class DatabaseService {
       .update(schema.userTable)
       .set({ lastLoggedIn: new Date() })
       .where(eq(schema.userTable.id, input.id!));
+  }
+
+  private async list_all_users_not_in_room({ roomId }: { roomId: string }) {
+    const users = await db
+      .select({
+        id: schema.userTable.id,
+        name: schema.userTable.name,
+        username: schema.userTable.username,
+        email: schema.userTable.email,
+        image: schema.userTable.image,
+        lastLoggedIn: schema.userTable.lastLoggedIn,
+        status: schema.userTable.status,
+      })
+      .from(schema.userTable)
+      .where(
+        notInArray(
+          schema.userTable.id,
+          db
+            .select({
+              userId: schema.userRoomTable.userId,
+            })
+            .from(schema.userRoomTable)
+            .where(eq(schema.userRoomTable.roomId, roomId))
+        )
+      )
+      .orderBy(desc(schema.userTable.lastLoggedIn));
+
+    return users;
   }
 
   private async create_user(input: schema.InsertUser) {
@@ -310,7 +339,24 @@ export class DatabaseService {
 
   private async list_user_invites(input: { userId: string }) {
     const invites = await db
-      .select()
+      .select({
+        group: {
+          name: schema.roomTable.name,
+          roomId: schema.roomTable.id,
+        },
+        invite: {
+          createdBy: schema.groupInviteTable.createdBy,
+          createdAt: schema.groupInviteTable.createdAt,
+          status: schema.groupInviteTable.status,
+          id: schema.groupInviteTable.id,
+        },
+        createdBy: {
+          id: schema.userTable.id,
+          name: schema.userTable.name,
+          image: schema.userTable.image,
+          username: schema.userTable.username,
+        },
+      })
       .from(schema.groupInviteTable)
       .where(eq(schema.groupInviteTable.userId, input.userId))
       .innerJoin(
@@ -319,6 +365,10 @@ export class DatabaseService {
           eq(schema.roomTable.type, "group"),
           eq(schema.roomTable.id, schema.groupInviteTable.roomId)
         )
+      )
+      .innerJoin(
+        schema.userTable,
+        eq(schema.groupInviteTable.createdBy, schema.userTable.id)
       )
       .orderBy(desc(schema.groupInviteTable.createdAt));
 
@@ -333,12 +383,40 @@ export class DatabaseService {
     return user_room;
   }
 
+  private async update_invite_status(input: {
+    userId: string;
+    inviteId: string;
+    status: "accepted" | "rejected";
+  }) {
+    const invite = await db.transaction(async (tx) => {
+      const invite = (
+        await tx
+          .update(schema.groupInviteTable)
+          .set({ status: input.status })
+          .where(eq(schema.groupInviteTable.id, input.inviteId))
+          .returning()
+      )[0];
+
+      const room = (
+        await tx
+          .select()
+          .from(schema.roomTable)
+          .where(and(eq(schema.roomTable.id, invite.roomId)))
+      )[0];
+
+      return { invite, room };
+    });
+
+    return invite;
+  }
+
   get room() {
     return {
       create_room: this.create_room,
       select_room_by_id: this.select_room_by_id,
       find_room_for_peers: this.find_room_for_peers,
       get_room_details: this.get_room_details,
+      list_all_users_not_in_room: this.list_all_users_not_in_room,
     };
   }
 
@@ -373,6 +451,7 @@ export class DatabaseService {
     return {
       create_group_invite: this.create_group_invite,
       list_user_invites: this.list_user_invites,
+      update_invite_status: this.update_invite_status,
     };
   }
 

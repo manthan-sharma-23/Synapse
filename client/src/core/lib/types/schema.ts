@@ -62,6 +62,7 @@ export interface IRoomDetails {
 }
 
 export interface IUserInvites {
-  rooms: IRoom;
-  group_invites: IGroupInvite;
+  group: IRoom;
+  invite: IGroupInvite;
+  createdBy: IUser;
 }

@@ -9,6 +9,7 @@ import {
 
 import { Button } from "../ui/button";
 import { FaBell } from "react-icons/fa";
+import NotificationSheetArea from "./NotificationSheetArea";
 
 const Notifications = () => {
   return (
@@ -28,6 +29,7 @@ const Notifications = () => {
             Here you will see you list of notifications and invites.
           </SheetDescription>
         </SheetHeader>
+        <NotificationSheetArea />
       </SheetContent>
     </Sheet>
   );

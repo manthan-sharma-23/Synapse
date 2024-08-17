@@ -4,6 +4,7 @@ import RedisService, { redisService } from "./redis.service";
 import { createAdapter } from "@socket.io/redis-adapter";
 import db from "../../db/database.service";
 import { SelectUser } from "../../db";
+import databaseService from "../../db/database.service";
 
 const pubClient = new RedisService().client;
 const subClient = pubClient.duplicate();
@@ -98,6 +99,51 @@ export default class SocketService {
         socket.leave(roomId);
       });
 
+      socket.on(
+        "event:invite-user-to-group",
+        async ({ roomId, userId, createdBy }, cb: SocketCallback) => {
+          const invite = await db.invites.create_group_invite({
+            userId,
+            roomId,
+            createdBy,
+          });
+
+          cb(invite);
+
+          const socketOn = this.isUserOnline(invite.userId);
+
+          if (socketOn) {
+            const invites = await databaseService.invites.list_user_invites({
+              userId,
+            });
+            io.to(socketOn).emit("event:new-group-invite", {
+              invite: invites[0],
+            });
+          }
+
+          return;
+        }
+      );
+
+      socket.on("update:invite", async (data, cb: SocketCallback) => {
+        const { status, inviteId, userId } = data as {
+          userId: string;
+          inviteId: string;
+          status: "accepted" | "rejected";
+        };
+
+        const { room, invite } =
+          await databaseService.invites.update_invite_status({
+            status,
+            inviteId,
+            userId,
+          });
+
+        cb({ room, invite });
+
+        return;
+      });
+
       socket.on("disconnect", async () => {
         const userId = this.user_map.get(socket.id);
         this.user_map.delete(socket.id);
@@ -109,5 +155,14 @@ export default class SocketService {
         }
       });
     });
+  }
+
+  private isUserOnline(userId: string) {
+    const is = this.user_map.has(userId);
+
+    if (!is) return false;
+
+    const socketId = this.user_map.get(userId)!;
+    return socketId;
   }
 }

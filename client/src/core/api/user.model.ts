@@ -3,6 +3,7 @@ import { configurations } from "../lib/config/config";
 import { AuthenticateUser, LoggedUser } from "../lib/types/auth.types";
 import { GetUserQuery } from "../lib/types/query.types";
 import { UserRoomList } from "../lib/types/global.types";
+import { IUser } from "../lib/types/schema";
 
 class UserModel {
   private base_url: string;
@@ -62,6 +63,18 @@ class UserModel {
         },
       })
     ).data as UserRoomList[];
+
+    return data;
+  };
+
+  list_all_users = async ({ roomId }: { roomId: string }) => {
+    const data = (
+      await axios.get(this.base_url + `/all/${roomId}`, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as IUser[];
 
     return data;
   };

@@ -5,6 +5,7 @@ import PeerChat from "./PeerChat";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { socket } from "@/socket";
+import GroupChat from "./GroupChat";
 
 const ChatsDisplay = ({ type }: { type: "peer" | "group" }) => {
   const { chats, loading } = useGetRoomChats();
@@ -31,7 +32,11 @@ const ChatsDisplay = ({ type }: { type: "peer" | "group" }) => {
 
   return (
     <div className="h-full w-full flex justify-center items-center overflow-hidden p-1">
-      {type === "peer" ? <PeerChat chats={chats} /> : <div></div>}
+      {type === "peer" ? (
+        <PeerChat chats={chats} />
+      ) : (
+        <GroupChat chats={chats} />
+      )}
     </div>
   );
 };

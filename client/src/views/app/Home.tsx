@@ -14,6 +14,7 @@ import UserRoomsDisplay from "@/components/utilities/UserRoomsDisplay";
 import { socket } from "@/socket";
 import CreateGroupButton from "@/components/utilities/CreateGroup";
 import Notifications from "@/components/utilities/Notifications";
+import { Toaster } from "sonner";
 
 const Home = () => {
   const [username, setUsername] = useState("");
@@ -153,6 +154,7 @@ const Home = () => {
         </div>
       </div>
       <div className="h-full w-2/3">{socket && <Chat />}</div>
+      <Toaster />
     </div>
   );
 };

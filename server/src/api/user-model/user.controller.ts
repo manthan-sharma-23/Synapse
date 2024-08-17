@@ -113,6 +113,19 @@ class UserController {
       return res.sendStatus(INTERNAL_SERVER_ERROR.code);
     }
   }
+
+  async get_all_users_in_app(req: Request, res: Response) {
+    try {
+      const { roomId } = req.params;
+      const users = await databaseService.room.list_all_users_not_in_room({
+        roomId,
+      });
+      return res.status(200).json(users);
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
 }
 
 export default new UserController();
