@@ -368,6 +368,42 @@ export class DatabaseService {
     return invite;
   }
 
+  private async list_all_room_users(input: { roomId: string }) {
+    const users = await db
+      .select()
+      .from(schema.userRoomTable)
+      .where(eq(schema.userRoomTable.roomId, input.roomId));
+
+    return users;
+  }
+  private get_room_latest_card = async (input: {
+    roomId: string;
+    userId: string;
+  }) => {
+    const room = (
+      await db
+        .select()
+        .from(schema.roomTable)
+        .where(eq(schema.roomTable.id, input.roomId))
+        .leftJoin(
+          schema.userRoomTable,
+          and(eq(schema.userRoomTable.roomId, input.roomId))
+        )
+        .leftJoin(
+          schema.userTable,
+          eq(schema.userTable.id, schema.userRoomTable.userId)
+        )
+        .leftJoin(
+          schema.chatTable,
+          eq(schema.chatTable.roomId, schema.roomTable.id)
+        )
+        .orderBy(desc(schema.chatTable.createdAt))
+        .limit(1)
+    )[0];
+
+    return { room: room.rooms, chat: room.chats, member: room.users };
+  };
+
   private async list_user_invites(input: { userId: string }) {
     const invites = await db
       .select({
@@ -455,6 +491,7 @@ export class DatabaseService {
       find_room_for_peers: this.find_room_for_peers,
       get_room_details: this.get_room_details,
       list_all_users_not_in_room: this.list_all_users_not_in_room,
+      list_all_room_users: this.list_all_room_users,
     };
   }
 
@@ -475,6 +512,7 @@ export class DatabaseService {
       get_user_room: this.get_user_room,
       delete_user_room: this.delete_user_room,
       get_user_rooms: this.get_user_rooms,
+      get_room_latest_card: this.get_room_latest_card,
     };
   }
 

@@ -98,6 +98,27 @@ export default class SocketService {
         socket.emit("user:message", chat);
 
         redisService.update_room_chats({ chat, roomId });
+
+        // relay the new message to all the active users side pannel
+        const room_card = await databaseService.userRoom.get_room_latest_card({
+          userId: user.user.id,
+          roomId,
+        });
+
+        const users = await databaseService.room.list_all_room_users({
+          roomId,
+        });
+
+        console.log("TO RELAY ::: ", this.user_map, users, room_card);
+
+        // relay new block card to all the users
+        users.forEach((user) => {
+          const socketId = this.isUserOnline(user.userId);
+
+          if (socketId) {
+            this.io.to(socketId).emit("block:update", room_card);
+          }
+        });
       });
 
       socket.on(
@@ -179,11 +200,11 @@ export default class SocketService {
   }
 
   private isUserOnline(userId: string) {
-    const is = this.user_map.has(userId);
-
-    if (!is) return false;
-
-    const socketId = this.user_map.get(userId)!;
-    return socketId;
+    for (const [key, value] of this.user_map.entries()) {
+      if (value === userId) {
+        return key;
+      }
+    }
+    return false;
   }
 }

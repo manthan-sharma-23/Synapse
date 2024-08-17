@@ -10,4 +10,5 @@ export interface UserRoomList {
   room: IRoom;
   chat: IChat | null;
   member: IUser | null;
+  new?: boolean;
 }

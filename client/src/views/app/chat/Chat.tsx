@@ -14,6 +14,7 @@ import { RoomChats } from "@/core/lib/types/global.types";
 import { ChatAtom } from "@/core/store/atom/chat.atom";
 import { socket } from "@/socket";
 import SelectImageOrVideo from "@/components/utilities/SelectImageOrVideo";
+import { UserRoomsListAtom } from "@/core/store/atom/user-room.atom";
 
 const Chat = () => {
   const { roomDetails, loading, roomId } = useGetRoomDetails();
@@ -21,6 +22,24 @@ const Chat = () => {
   const [event] = useState<string | null>(null);
   const [text, setText] = useState("");
   const setChatsInBox = useSetRecoilState(ChatAtom);
+  const setUserRooms = useSetRecoilState(UserRoomsListAtom);
+
+  useEffect(() => {
+    try {
+      setUserRooms((v) =>
+        v.map((value) => {
+          if (value.room.id === roomId) {
+            if (value.new) {
+              return { ...value, new: false };
+            }
+          }
+          return value;
+        })
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }, [roomId]);
 
   useEffect(() => {
     if (socket) {

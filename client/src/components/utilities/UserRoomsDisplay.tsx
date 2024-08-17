@@ -9,9 +9,21 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { FaFileImage } from "react-icons/fa";
 import { FaFileVideo } from "react-icons/fa";
+import { useEffect } from "react";
+import { socket } from "@/socket";
 
 const UserRoomsDisplay = () => {
-  const { userRooms, loading } = useGetUserRooms();
+  const { userRooms, loading, setUserRooms } = useGetUserRooms();
+
+  useEffect(() => {
+    socket.on("block:update", (data: UserRoomList) => {
+      data.new = true;
+      setUserRooms((v) => [
+        data,
+        ...v.filter((v) => v.room.id !== data.room.id),
+      ]);
+    });
+  }, []);
 
   if (loading) {
     return <LoadingPage />;
@@ -46,6 +58,7 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
     <div
       onClick={() => {
         const params = new URLSearchParams({ roomId: userRoom.room.id });
+
         navigate(`/?${params}`);
       }}
       className={twMerge(
@@ -62,7 +75,7 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
           />
         </AvatarFallback>
       </Avatar>
-      <div className="h-full w-auto flex flex-col items-start justify-center">
+      <div className="h-full w-full flex flex-col items-start justify-center">
         <div className="flex gap-2 items-center justify-start">
           <p className="text-lg font-medium">
             {userRoom.member.name || userRoom.member.username}
@@ -73,7 +86,24 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
             </p>
           )}
         </div>
-        {userRoom.chat && <p>{userRoom.chat.text}</p>}
+        <div className="w-full pr-6 flex justify-between items-center">
+          {userRoom.chat && userRoom.chat.type === "text" && (
+            <p>{userRoom.chat.text}</p>
+          )}
+          {userRoom.chat && userRoom.chat.type === "image" && (
+            <div className="flex gap-1 justify-start items-center text-gray-700">
+              <FaFileImage />
+              Image
+            </div>
+          )}
+          {userRoom.chat && userRoom.chat.type === "video" && (
+            <div className="flex gap-1 justify-start items-center text-gray-700">
+              <FaFileVideo />
+              Video
+            </div>
+          )}
+          {userRoom.new && <p className="bg-green-500 h-4 w-4 rounded-full" />}
+        </div>
       </div>
     </div>
   );
@@ -102,7 +132,7 @@ const UserGroupBox = ({ userRoom }: { userRoom: UserRoomList }) => {
           size={50}
         />
       </Avatar>
-      <div className="h-full w-auto flex flex-col items-start justify-center">
+      <div className="h-full w-full flex flex-col items-start justify-center">
         <div className="flex gap-2 items-center justify-start">
           <p className="text-lg font-medium">
             {userRoom.room.name || userRoom.room.id}
@@ -113,21 +143,24 @@ const UserGroupBox = ({ userRoom }: { userRoom: UserRoomList }) => {
             </p>
           )}
         </div>
-        {userRoom.chat && userRoom.chat.type === "text" && (
-          <p>{userRoom.chat.text}</p>
-        )}
-        {userRoom.chat && userRoom.chat.type === "image" && (
-          <div className="flex gap-1 justify-start items-center text-gray-700">
-            <FaFileImage />
-            Image
-          </div>
-        )}
-        {userRoom.chat && userRoom.chat.type === "video" && (
-          <div className="flex gap-1 justify-start items-center text-gray-700">
-            <FaFileVideo />
-            Video
-          </div>
-        )}
+        <div className="w-full pr-6 flex justify-between items-center">
+          {userRoom.chat && userRoom.chat.type === "text" && (
+            <p>{userRoom.chat.text}</p>
+          )}
+          {userRoom.chat && userRoom.chat.type === "image" && (
+            <div className="flex gap-1 justify-start items-center text-gray-700">
+              <FaFileImage />
+              Image
+            </div>
+          )}
+          {userRoom.chat && userRoom.chat.type === "video" && (
+            <div className="flex gap-1 justify-start items-center text-gray-700">
+              <FaFileVideo />
+              Video
+            </div>
+          )}
+          {userRoom.new && <p className="bg-green-500 h-4 w-4 rounded-full" />}
+        </div>
       </div>
     </div>
   );

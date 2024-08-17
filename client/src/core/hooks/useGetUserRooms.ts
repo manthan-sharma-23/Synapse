@@ -23,5 +23,5 @@ export const useGetUserRooms = () => {
       });
   }, []);
 
-  return { userRooms, loading };
+  return { userRooms, loading, setUserRooms };
 };
