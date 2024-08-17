@@ -7,6 +7,7 @@ import RootLayout from "./components/layouts/RootLayout";
 import Home from "./views/app/Home";
 import { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
+import Profile from "./views/app/profile/Profile";
 
 const App = () => {
   const client = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => {
             <Route path="/" element={<RootLayout />}>
               <Route path="/" element={<Home />} />
             </Route>
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </BrowserRouter>
       </RecoilRoot>

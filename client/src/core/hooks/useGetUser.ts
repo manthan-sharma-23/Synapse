@@ -18,5 +18,5 @@ export const useGetUser = () => {
     }
   }, [token, isLoading, isError]);
 
-  return { loading: isLoading, error: isError };
+  return { user: data?.user, loading: isLoading, error: isError };
 };

@@ -15,6 +15,14 @@ import { socket } from "@/socket";
 import CreateGroupButton from "@/components/utilities/CreateGroup";
 import Notifications from "@/components/utilities/Notifications";
 import { Toaster } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Home = () => {
   const [username, setUsername] = useState("");
@@ -91,12 +99,35 @@ const Home = () => {
       <div className="h-full w-1/3 border-r border-2">
         <div className="p-4 px-7 flex justify-start gap-6  items-center w-full">
           {user && (
-            <Avatar className="h-[3rem] w-[3rem]">
-              <AvatarImage src={user.image || ""} />
-              <AvatarFallback>
-                <Avvvatars value={user.username} size={55} />
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Avatar className="h-[3rem] w-[3rem]">
+                  <AvatarImage src={user.image || ""} />
+                  <AvatarFallback>
+                    <Avvvatars value={user.username} size={55} />
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    navigate("/profile");
+                  }}
+                >
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    window.localStorage.clear();
+                    navigate("/auth/signin");
+                  }}
+                >
+                  Signout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <div className="relative flex justify-start items-center w-full">
             <div className="relative w-[100%]">

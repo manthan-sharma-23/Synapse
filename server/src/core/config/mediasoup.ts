@@ -2,6 +2,21 @@ import { RtpCodecCapability } from "mediasoup/node/lib/RtpParameters";
 import { WorkerLogLevel, WorkerLogTag } from "mediasoup/node/lib/Worker";
 import * as os from "os";
 
+function getLocalIPv4Address(): string | null {
+  const networkInterfaces = os.networkInterfaces();
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    if (interfaces) {
+      for (const iface of interfaces) {
+        if (iface.family === "IPv4" && !iface.internal) {
+          return iface.address;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export const config = {
   mediasoup: {
     // Worker settings
@@ -48,7 +63,7 @@ export const config = {
       listenIps: [
         {
           ip: "0.0.0.0",
-          announcedIp: "146.196.39.66", // replace by public IP address
+          announcedIp: getLocalIPv4Address()!, // replace by public IP address
         },
       ],
       maxIncomingBitrate: 1500000,

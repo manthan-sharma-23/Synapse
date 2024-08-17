@@ -544,6 +544,81 @@ export class DatabaseService {
     return invite;
   }
 
+  private async check_username_availibility(input: {
+    userId: string;
+    username: string;
+  }): Promise<boolean> {
+    const existingUser = await db
+      .select({ username: schema.userTable.username })
+      .from(schema.userTable)
+      .where(
+        and(
+          ne(schema.userTable.id, input.userId),
+          eq(schema.userTable.username, input.username)
+        )
+      )
+      .limit(1);
+
+    return existingUser.length === 0;
+  }
+
+  private async update_user_profile({
+    url = null,
+    name = null,
+    username,
+    id,
+  }: {
+    url?: string | null;
+    name?: string | null;
+    username: string;
+    id: string;
+  }) {
+    if (username) {
+      const isUserNameValid = await this.check_username_availibility({
+        userId: id,
+        username: username,
+      });
+
+      if (isUserNameValid) {
+        const user_prev = (
+          await db
+            .select()
+            .from(schema.userTable)
+            .where(eq(schema.userTable.id, id))
+        )[0];
+        if (user_prev.username === username) {
+          const user = (
+            await db
+              .update(schema.userTable)
+              .set({
+                name: name || null,
+                image: url || null,
+              })
+              .where(eq(schema.userTable.id, id))
+              .returning()
+          )[0];
+
+          return user;
+        }
+        const user = (
+          await db
+            .update(schema.userTable)
+            .set({
+              name: name || null,
+              username: username,
+              image: url || null,
+            })
+            .where(eq(schema.userTable.id, id))
+            .returning()
+        )[0];
+
+        return user;
+      }
+    } else {
+      return;
+    }
+  }
+
   get room() {
     return {
       create_room: this.create_room,
@@ -565,6 +640,8 @@ export class DatabaseService {
       update_user_last_seen: this.update_user_last_seen,
       update_user_status: this.update_user_status,
       create_user: this.create_user,
+      update_user_profile: this.update_user_profile,
+      check_username_availibility: this.check_username_availibility,
     };
   }
 

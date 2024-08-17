@@ -79,6 +79,56 @@ class UserModel {
     return data;
   };
 
+  presign_user_picture = async (input: { fileName: string; file: File }) => {
+    const data = (
+      await axios.put(this.base_url + `/update-profile-picture`, input, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as {
+      key: string;
+      pre_sign_url: string;
+      url: string;
+      contentType: string;
+    };
+
+    console.log(data);
+
+    if (!data.pre_sign_url) {
+      return;
+    }
+
+    await axios.put(data.pre_sign_url, input.file, {
+      headers: { "Content-Type": data.contentType },
+    });
+
+    return { url: data.url };
+  };
+
+  async update_user(input: { name?: string; url?: string; username: string }) {
+    const data = (
+      await axios.put(this.base_url + `/update-user`, input, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as IUser;
+
+    return data;
+  }
+
+  async check_username(input: { username: string }) {
+    const data = (
+      await axios.get(this.base_url + `/username/${input.username}`, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as boolean;
+    return data;
+  }
+
   get user() {
     return {
       get_user: this.get_user,

@@ -20,6 +20,10 @@ export class ConferenceService {
 
   private listenToEvents(io: io.Server) {
     io.on("connection", (socket) => {
+      socket.on("check:room", ({ roomId }, cb: SocketCallback) => {
+        cb(this.roomList.has(roomId));
+      });
+
       socket.on(
         WebSocketEventType.CREATE_ROOM,
         ({ roomId }, cb: SocketCallback) => {
@@ -89,6 +93,7 @@ export class ConferenceService {
         if (room._peers.size <= 0) {
           this.roomList.delete(room.id);
         }
+        console.log(peer, "left");
 
         socket.to(room.id).emit(WebSocketEventType.USER_LEFT, {
           message: `${peer?.name} left the room.`,

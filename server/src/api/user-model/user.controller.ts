@@ -8,10 +8,14 @@ import {
   USER_DOESNT_EXISTS,
   USER_LOGGED_IN_SUCCESSFULLY,
 } from "../../core/lib/errors";
-import { UserValidator } from "../../core/lib/types/validators/user.validators";
+import {
+  UpdateUserProfileValidator,
+  UserValidator,
+} from "../../core/lib/types/validators/user.validators";
 import bcryptService from "../../core/services/bcrypt.service";
 import jwtService from "../../core/services/jwt.service";
 import databaseService from "../../db/database.service";
+import s3Service from "../../core/services/s3.service";
 
 class UserController {
   async get_user(req: Request, res: Response) {
@@ -121,6 +125,66 @@ class UserController {
         roomId,
       });
       return res.status(200).json(users);
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
+
+  async update_profile_picture(req: Request, res: Response) {
+    try {
+      const { fileName } = req.body;
+      const { userId } = req.user;
+
+      console.log(fileName);
+
+      const data = await s3Service.generate_presigned_url_user({
+        userId,
+        fileName,
+      });
+      console.log(data);
+
+      return res.json(data);
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
+
+  async check_username_validity(req: Request, res: Response) {
+    try {
+      const { username } = req.params;
+      const { userId } = req.user;
+
+      const data = await databaseService.user.check_username_availibility({
+        userId,
+        username,
+      });
+
+      return res.json(data);
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
+
+  async update_profile(req: Request, res: Response) {
+    try {
+      console.log("UPDATE ", req.body);
+
+      const { username, name, url } = UpdateUserProfileValidator.parse(
+        req.body
+      );
+      const { userId } = req.user;
+
+      const data = await databaseService.user.update_user_profile({
+        id: userId,
+        username,
+        name,
+        url,
+      });
+
+      return res.json(data);
     } catch (error) {
       console.log(error);
       return res.sendStatus(500);

@@ -20,10 +20,15 @@ class S3Service {
     roomId,
     fileName,
   }: {
-    userId: number;
-    roomId: string;
+    userId: string;
+    roomId?: string;
     fileName: string;
   }) {
+    if (!roomId) {
+      return `${this.base_path}/${userId}/${
+        Math.random() * 100000
+      }/${fileName}`;
+    }
     return `${this.base_path}/${roomId}/${userId}/${
       Math.random() * 100000
     }/${fileName}`;
@@ -34,11 +39,46 @@ class S3Service {
     roomId,
     fileName,
   }: {
-    userId: number;
+    userId: string;
     roomId: string;
     fileName: string;
   }) {
     const key = this.file_key_generator({ userId, roomId, fileName });
+
+    const contentType = lookup(extname(fileName)) || "application/octet-stream";
+
+    const command = new PutObjectCommand({
+      Bucket: this.bucket_name,
+      Key: key,
+      ContentType: contentType,
+    });
+
+    const s3_client = new S3Client({
+      credentials: {
+        accessKeyId: this.access_key_id,
+        secretAccessKey: this.secret_access_key,
+      },
+      region: this.bucket_region,
+    });
+
+    //@ts-ignore
+    const pre_sign_url = await getSignedUrl(s3_client, command, {
+      expiresIn: 5 * 60,
+    });
+
+    const url = this.get_file_url(key);
+    return { key, pre_sign_url, url, contentType };
+  }
+  public async generate_presigned_url_user({
+    userId,
+
+    fileName,
+  }: {
+    userId: string;
+
+    fileName: string;
+  }) {
+    const key = this.file_key_generator({ userId, fileName });
 
     const contentType = lookup(extname(fileName)) || "application/octet-stream";
 
