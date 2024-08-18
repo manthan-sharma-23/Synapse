@@ -17,6 +17,10 @@ Synapse is built using the following technologies:
   - **Drizzle ORM** with **Postgres**: For database management.
   - **Amazon S3**: For file uploads and storage.
   - **Redis**: For caching and real-time features.
+- **Deployment**
+  - **Server**: AWS EC2 using NGINX reverse proxy with ssl
+  - **Client**: Vercel hosting
+  - **Database**: Aiven 
 
 ## Excalidraw Architecture Diagram
 
