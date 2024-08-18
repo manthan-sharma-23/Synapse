@@ -32,7 +32,7 @@ const MessageInfo = ({ chat }: { chat: IChat }) => {
             info.map((user) => (
               <div
                 key={user.username}
-                className="flex justify-between items-center my-1"
+                className="flex justify-between items-center my-3"
               >
                 <div className="flex justify-start h-full items-center gap-3">
                   <Avatar className="h-[3rem] w-[3rem]">
