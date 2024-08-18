@@ -89,7 +89,7 @@ export default class SocketService {
         console.log(data);
 
         const { user, roomId, message } = data as {
-          user: { user: SelectUser };
+          user: SelectUser;
           roomId: string;
           message: {
             url?: string;
@@ -98,7 +98,7 @@ export default class SocketService {
           };
         };
         const chat = await db.chats.add_chat_to_room({
-          userId: user.user.id,
+          userId: user.id,
           roomId: roomId,
           type: message.type,
           text: message.text || null,
@@ -108,11 +108,11 @@ export default class SocketService {
         socket.to(roomId).emit("user:message", chat);
         socket.emit("user:message", chat);
 
-        redisService.update_room_chats({ chat, roomId });
+        // redisService.update_room_chats({ chat, roomId });
 
         // relay the new message to all the active users side pannel
         const room_card = await databaseService.userRoom.get_room_latest_card({
-          userId: user.user.id,
+          userId: user.id,
           roomId,
         });
 
@@ -191,6 +191,35 @@ export default class SocketService {
         cb({ room, invite });
 
         return;
+      });
+
+      // read reciepts
+
+      socket.on("read:room", async ({ userId, roomId }) => {
+        console.log("Read room", roomId, userId);
+        await databaseService.read_reciepts.read_room({ userId, roomId });
+        socket.to(roomId).emit("read:user-room", { roomId, userId });
+
+        // await redisService.set_room_chats({ chats, roomId });
+      });
+
+      socket.on("read:message", async ({ userId, roomId, chatId }) => {
+        console.log("Read:message", userId, roomId, chatId);
+
+        try {
+          const receipt = await databaseService.read_reciepts.read_message_room(
+            {
+              userId,
+              roomId,
+              chatId,
+            }
+          );
+          const data = { chatId, roomId, userId, receipt };
+          console.log("UPDATED RECIEPT", data);
+          socket.to(roomId).emit("read:user-message", data);
+        } catch (error) {
+          console.log(error);
+        }
       });
 
       socket.on("disconnect", async () => {

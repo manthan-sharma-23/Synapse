@@ -7,7 +7,6 @@ import { TbSend2 } from "react-icons/tb";
 import { GoPaperclip } from "react-icons/go";
 import React, { useEffect, useState } from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { UserAtom } from "@/core/store/atom/user.atom";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ChatsDisplay from "@/components/utilities/ChatsDisplay";
 import { RoomChats } from "@/core/lib/types/global.types";
@@ -15,33 +14,35 @@ import { ChatAtom } from "@/core/store/atom/chat.atom";
 import { socket } from "@/socket";
 import SelectImageOrVideo from "@/components/utilities/SelectImageOrVideo";
 import { UserRoomsListAtom } from "@/core/store/atom/user-room.atom";
+import { UserSelector } from "@/core/store/selectors/user.selectors";
+import { useGetUser } from "@/core/hooks/useGetUser";
+import { IChatReadReceipt } from "@/core/lib/types/schema";
 
 const Chat = () => {
   const { roomDetails, loading, roomId } = useGetRoomDetails();
-  const user = useRecoilValue(UserAtom);
+  const { user } = useGetUser();
   const [event, setEvent] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [chatBox, setChatsInBox] = useRecoilState(ChatAtom);
   const setUserRooms = useSetRecoilState(UserRoomsListAtom);
+  const user_select = useRecoilValue(UserSelector);
 
   useEffect(() => {
-    try {
-      setUserRooms((v) =>
-        v.map((value) => {
-          if (value.room.id === roomId) {
-            if (value.new) {
-              return { ...value, new: false };
-            }
+    setUserRooms((v) =>
+      v.map((value) => {
+        if (value.room.id === roomId) {
+          if (value.new) {
+            return { ...value, new: false };
           }
-          return value;
-        })
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  }, [roomId]);
+        }
+        return value;
+      })
+    );
 
-  useEffect(() => {
+    if (user) {
+      socket.emit("read:room", { roomId, userId: user.id });
+    }
+
     socket.emit("join:room", { roomId });
 
     const handleTyping = (message: string) => {
@@ -56,35 +57,104 @@ const Chat = () => {
       const chat = data;
       if (!chatBox.includes(chat)) {
         setChatsInBox((v) => [...v, chat]);
+        console.log(chat);
+        console.log(user);
+
+        if (user && user.id !== chat.users.id) {
+          socket.emit("read:message", {
+            userId: user_select?.id,
+            roomId,
+            chatId: chat.chats.id,
+          });
+        }
+      }
+    };
+
+    const handleReadMessage = (data: {
+      chatId: string;
+      roomId: string;
+      userId: string;
+      receipt: IChatReadReceipt;
+    }) => {
+      if (data.receipt.id) {
+        setChatsInBox((v) =>
+          v.map((chat) => {
+            if (chat.chats.id === data.chatId) {
+              const receipts = chat.receipts.map((receipt) => {
+                if (receipt.userId === data.userId) {
+                  return data.receipt;
+                }
+
+                return receipt;
+              });
+
+              return { ...chat, receipts };
+            }
+            return chat;
+          })
+        );
+      }
+    };
+
+    const handleReadUserRoom = (data: { userId: string; roomId: string }) => {
+      if (data.userId && data.roomId) {
+        setChatsInBox((prevChats) => {
+          return prevChats.map((chat) => {
+            if (chat.chats.roomId === data.roomId) {
+              const updatedReceipts = chat.receipts.map((receipt) => {
+                if (
+                  receipt.userId === data.userId &&
+                  receipt.status === "delivered"
+                ) {
+                  return {
+                    ...receipt,
+                    status: "read" as IChatReadReceipt["status"],
+                    readAt: new Date(),
+                  };
+                }
+                return receipt;
+              });
+
+              return {
+                ...chat,
+                receipts: updatedReceipts,
+              };
+            }
+            return chat;
+          });
+        });
       }
     };
 
     socket.on("user:typing", handleTyping);
     socket.on("user:stop-typing", handleStopTyping);
     socket.on("user:message", handleMessage);
+    socket.on("read:user-message", handleReadMessage);
+    socket.on("read:user-room", handleReadUserRoom);
 
     return () => {
       socket.emit("event:user-leave-room", { roomId });
       socket.off("user:typing", handleTyping);
       socket.off("user:stop-typing", handleStopTyping);
       socket.off("user:message", handleMessage);
+      socket.off("read:user-message", handleReadMessage);
     };
-  }, [roomId]);
+  }, [roomId, user]);
 
   useEffect(() => {
     let typingTimeout: NodeJS.Timeout | null = null;
 
     if (text.trim() !== "") {
-      socket.emit("event:typing", { roomId, user: user?.user });
+      socket.emit("event:typing", { roomId, user: user });
 
       if (typingTimeout) {
         clearTimeout(typingTimeout);
       }
       typingTimeout = setTimeout(() => {
-        socket.emit("event:stop-typing", { roomId, user: user?.user });
+        socket.emit("event:stop-typing", { roomId, user: user });
       }, 3000);
     } else {
-      socket.emit("event:stop-typing", { roomId, user: user?.user });
+      socket.emit("event:stop-typing", { roomId, user: user });
     }
 
     return () => {

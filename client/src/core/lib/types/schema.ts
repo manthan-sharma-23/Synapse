@@ -67,3 +67,12 @@ export interface IUserInvites {
   invite: IGroupInvite;
   createdBy: IUser;
 }
+
+export interface IChatReadReceipt {
+  id: string;
+  chatId: string;
+  roomId: string;
+  userId: string;
+  readAt?: Date | null;
+  status: "delivered" | "read";
+}

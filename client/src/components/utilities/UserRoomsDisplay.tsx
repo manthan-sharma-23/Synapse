@@ -90,9 +90,15 @@ const UserPeerBox = ({ userRoom }: { userRoom: UserRoomList }) => {
           )}
         </div>
         <div className="w-full pr-6 flex justify-between items-center">
-          {userRoom.chat && userRoom.chat.type === "text" && (
-            <p>{userRoom.chat.text}</p>
-          )}
+          {userRoom.chat &&
+            userRoom.chat.text &&
+            userRoom.chat.type === "text" && (
+              <p>
+                {userRoom.chat.text.length < 50
+                  ? userRoom.chat.text
+                  : userRoom.chat.text.slice(0, 51) + ".."}
+              </p>
+            )}
           {userRoom.chat && userRoom.chat.type === "image" && (
             <div className="flex gap-1 justify-start items-center text-gray-700">
               <FaFileImage />

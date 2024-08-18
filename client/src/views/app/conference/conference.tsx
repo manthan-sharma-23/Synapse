@@ -5,7 +5,7 @@ import ConferenceMain from "./main";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { sendRequestToSocket } from "@/socket";
-import { SlCallIn } from "react-icons/sl";
+import { PiPhoneCallFill } from "react-icons/pi";
 
 const Conference = () => {
   const [params] = useSearchParams();
@@ -37,10 +37,10 @@ const Conference = () => {
           </Button>
         ) : (
           <Button
-            className="text-xl bg-black text-green-600  hover:text-white"
+            className="text-xl bg-white border border-green-500 text-green-600  hover:text-white hover:bg-green-500"
             size={"icon"}
           >
-            <SlCallIn />
+            <PiPhoneCallFill />
           </Button>
         )}
       </DrawerTrigger>

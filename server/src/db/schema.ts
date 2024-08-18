@@ -63,9 +63,9 @@ export const userRoomTable = pgTable(
 
 export const chatTable = pgTable("chats", {
   id: uuid("id").primaryKey().defaultRandom(),
-  text: varchar("text", { length: 400 }),
+  text: varchar("text", { length: 20000 }),
   type: varchar("type").notNull().$type<"text" | "image" | "video">(),
-  url: varchar("url", { length: 255 }),
+  url: varchar("url", { length: 1000 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   roomId: uuid("room_id")
     .notNull()
@@ -93,6 +93,33 @@ export const groupInviteTable = pgTable("group_invites", {
     .default("pending"),
 });
 
+export const chatReadRecieptTable = pgTable(
+  "read_receipts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    chatId: uuid("chat_id")
+      .notNull()
+      .references(() => chatTable.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id")
+      .notNull()
+      .references(() => roomTable.id, { onDelete: "cascade" }),
+
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    readAt: timestamp("read_at"),
+    status: varchar("status")
+      .$type<"delivered" | "read">()
+      .default("delivered"),
+  },
+  (table) => ({
+    uniqueReadReceipt: uniqueIndex("unique_read_receipt").on(
+      table.chatId,
+      table.userId
+    ),
+  })
+);
+
 export type InsertRoom = typeof roomTable.$inferInsert;
 export type SelectRoom = typeof roomTable.$inferSelect;
 
@@ -107,3 +134,9 @@ export type SelectChat = typeof chatTable.$inferSelect;
 
 export type SelectGroupInvite = typeof groupInviteTable.$inferSelect;
 export type InsertGroupInvite = typeof groupInviteTable.$inferInsert;
+
+export type SelectChatReadRecieptTable =
+  typeof chatReadRecieptTable.$inferSelect;
+
+export type InsertChatReadRecieptTable =
+  typeof chatReadRecieptTable.$inferInsert;

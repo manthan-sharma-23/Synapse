@@ -9,6 +9,7 @@ import { ne } from "drizzle-orm";
 import { notInArray } from "drizzle-orm";
 import { count } from "drizzle-orm";
 import { asc } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 export class DatabaseService {
   private async get_user(input: { userId: string }) {
@@ -253,6 +254,7 @@ export class DatabaseService {
   }
 
   private async get_room_chats(input: { roomId: string; offset?: number }) {
+    // Fetch chats along with their user information
     const chats = await db
       .select()
       .from(schema.chatTable)
@@ -262,24 +264,82 @@ export class DatabaseService {
         eq(schema.userTable.id, schema.chatTable.userId)
       )
       .offset(input.offset || 0)
-      .limit(25);
+      .limit(50);
 
-    return chats;
+    // Fetch the chat IDs from the previously fetched chats
+    const chatIds = chats.map((chat) => chat.chats.id);
+
+    // Fetch read receipts for the retrieved chat IDs
+    const receipts = await db
+      .select()
+      .from(schema.chatReadRecieptTable)
+      .where(inArray(schema.chatReadRecieptTable.chatId, chatIds));
+
+    // Map receipts to a structure where each chat has its own receipts
+    const chatReceiptsMap = receipts.reduce((acc, receipt) => {
+      if (!acc[receipt.chatId]) {
+        acc[receipt.chatId] = [];
+      }
+      acc[receipt.chatId].push(receipt);
+      return acc;
+    }, {} as Record<string, schema.SelectChatReadRecieptTable[]>);
+
+    // Attach receipts to each chat
+    const chatsWithReceipts = chats.map((chat) => ({
+      ...chat,
+      receipts: chatReceiptsMap[chat.chats.id] || [],
+    }));
+
+    return chatsWithReceipts;
   }
 
   private async add_chat_to_room(input: schema.InsertChat) {
-    const chat_create = (
-      await db.insert(schema.chatTable).values(input).returning()
-    )[0];
+    const chat = await db.transaction(async (tx) => {
+      const chat_create = (
+        await tx.insert(schema.chatTable).values(input).returning()
+      )[0];
 
-    const chat = await db
-      .select()
-      .from(schema.chatTable)
-      .where(eq(schema.chatTable.id, chat_create.id))
-      .innerJoin(schema.userTable, eq(schema.userTable.id, chat_create.userId))
-      .limit(1);
+      const usersInRoom = await tx
+        .select()
+        .from(schema.userRoomTable)
+        .where(eq(schema.userRoomTable.roomId, chat_create.roomId));
 
-    return chat[0];
+      const chat_receipts_created = await Promise.all(
+        usersInRoom.map(async (userRoom) => {
+          if (userRoom.userId === chat_create.userId) {
+            return null;
+          }
+          return (
+            await tx
+              .insert(schema.chatReadRecieptTable)
+              .values({
+                chatId: chat_create.id,
+                userId: userRoom.userId,
+                roomId: chat_create.roomId,
+              })
+              .returning()
+          )[0];
+        })
+      );
+
+      const filteredChatReceipts = chat_receipts_created.filter(
+        (receipt) => receipt !== null
+      );
+
+      const chatWithUser = await tx
+        .select()
+        .from(schema.chatTable)
+        .where(eq(schema.chatTable.id, chat_create.id))
+        .innerJoin(
+          schema.userTable,
+          eq(schema.userTable.id, chat_create.userId)
+        )
+        .limit(1);
+
+      return { receipts: filteredChatReceipts, ...chatWithUser[0] };
+    });
+
+    return chat;
   }
 
   private async get_user_rooms({ userId }: { userId: string }) {
@@ -489,12 +549,11 @@ export class DatabaseService {
         .where(
           and(
             eq(schema.chatTable.roomId, input.roomId),
-            or(
-              eq(schema.chatTable.type, "image"),
-              eq(schema.chatTable.type, "video")
-            )
+            ne(schema.chatTable.type, "text")
           )
         );
+
+      console.log(media, "medias");
 
       return { users, media, room: groupInfo };
     });
@@ -619,6 +678,50 @@ export class DatabaseService {
     }
   }
 
+  private async read_room(input: { roomId: string; userId: string }) {
+    const read = await db
+      .update(schema.chatReadRecieptTable)
+      .set({
+        status: "read",
+        readAt: new Date(),
+      })
+      .where(
+        and(
+          eq(schema.chatReadRecieptTable.userId, input.userId),
+          eq(schema.chatReadRecieptTable.roomId, input.roomId),
+          eq(schema.chatReadRecieptTable.status, "delivered")
+        )
+      )
+      .returning();
+
+    return read;
+  }
+
+  private async read_message_room(input: {
+    roomId: string;
+    chatId: string;
+    userId: string;
+  }) {
+    if (!input.chatId || !input.roomId || !input.userId) {
+      return;
+    }
+    const read = await db
+      .update(schema.chatReadRecieptTable)
+      .set({
+        status: "read",
+        readAt: new Date(),
+      })
+      .where(
+        and(
+          eq(schema.chatReadRecieptTable.userId, input.userId),
+          eq(schema.chatReadRecieptTable.roomId, input.roomId),
+          eq(schema.chatReadRecieptTable.chatId, input.chatId)
+        )
+      )
+      .returning();
+    return read[0];
+  }
+
   get room() {
     return {
       create_room: this.create_room,
@@ -667,6 +770,13 @@ export class DatabaseService {
       create_group_invite: this.create_group_invite,
       list_user_invites: this.list_user_invites,
       update_invite_status: this.update_invite_status,
+    };
+  }
+
+  get read_reciepts() {
+    return {
+      read_room: this.read_room,
+      read_message_room: this.read_message_room,
     };
   }
 

@@ -38,15 +38,15 @@ class RoomController {
     try {
       const { roomId } = req.params;
 
-      const chats_cached = await redisService.get_room_chats({ roomId });
+      // const chats_cached = await redisService.get_room_chats({ roomId });
 
-      if (chats_cached) {
-        return res.status(200).json(chats_cached);
-      }
+      // if (chats_cached) {
+      //   return res.status(200).json(chats_cached);
+      // }
 
       const chats = await databaseService.chats.get_room_chats({ roomId });
 
-      await redisService.set_room_chats({ chats, roomId });
+      // await redisService.set_room_chats({ chats, roomId });
 
       return res.status(200).json(chats);
     } catch (error) {

@@ -11,7 +11,6 @@ import { UserSelector } from "@/core/store/selectors/user.selectors";
 
 const PeerDetails = ({ details }: { details: RoomExpandedDetails }) => {
   const user_log = useRecoilValue(UserSelector);
-  console.log(details);
 
   const user = details.users.find((user) => user.id !== user_log!.id);
 
@@ -40,7 +39,7 @@ const PeerDetails = ({ details }: { details: RoomExpandedDetails }) => {
         </Badge>
       </div>
       <div className="h-[65vh] w-full">
-        <Tabs defaultValue="members" className="w-full">
+        <Tabs defaultValue="media" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger className="w-full" value="media">
               Media
