@@ -27,7 +27,7 @@ const Signin = () => {
         password: user.password,
       });
       if (res.isLoggedIn) {
-        navigate("/");
+        window.location.assign("/");
         toast.success("Logged in successfully");
         setLoading(false);
       } else {
@@ -39,7 +39,6 @@ const Signin = () => {
       toast.error("Please add both email and password !");
     }
   };
-
 
   return (
     <Card className="mx-auto max-w-sm">

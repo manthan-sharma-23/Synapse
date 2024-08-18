@@ -37,7 +37,7 @@ export default function Signup() {
 
       if (res.isLoggedIn) {
         toast.success("User Registered succssfully");
-        navigate("/");
+        window.location.assign("/");
       } else {
         toast.error(res.message);
       }
