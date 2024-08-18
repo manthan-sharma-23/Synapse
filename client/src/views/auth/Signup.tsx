@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,6 @@ import userModel from "@/core/api/user.model";
 
 export default function Signup() {
   const [user, setUser] = useState<Partial<AuthenticateUser>>({});
-  const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);

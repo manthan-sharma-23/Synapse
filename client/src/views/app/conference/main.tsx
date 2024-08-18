@@ -441,7 +441,7 @@ const ConferenceMain = () => {
     <div className="h-full w-full flex flex-col items-center justify-center">
       <div className="h-[90%] w-full p-4">
         <div className="h-full w-[95vw] p-3 overflow-hidden flex flex-wrap items-center justify-center gap-4">
-          <LocalUserPannel stream={localStream} name={name!} />
+          <LocalUserPannel stream={localStream} />
           <UserCarousel
             usersInRoom={usersInRoom}
             remoteStreams={remoteStreams}

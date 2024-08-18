@@ -13,7 +13,7 @@ import userModel from "@/core/api/user.model";
 import { IoMdArrowRoundBack } from "react-icons/io";
 
 const Profile = () => {
-  const { user: data_user, loading, error } = useGetUser();
+  const { user: data_user, loading } = useGetUser();
   const [user, setUser] = useState<IUser | undefined>(undefined);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(
     undefined
@@ -27,14 +27,6 @@ const Profile = () => {
       setAvatarPreview(data_user.image);
     }
   }, [data_user]);
-
-  if (error) {
-    return (
-      <div className="text-red-500">
-        An error occurred. Please try again later.
-      </div>
-    );
-  }
 
   if (loading) {
     return <LoadingPage />;

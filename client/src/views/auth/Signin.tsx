@@ -11,13 +11,12 @@ import { Label } from "@/components/ui/label";
 import userModel from "@/core/api/user.model";
 import { AuthenticateUser } from "@/core/lib/types/auth.types";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const Signin = () => {
   const [user, setUser] = useState<Partial<AuthenticateUser>>({});
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleLogin = async () => {
     if (user.email && user.password) {
