@@ -70,7 +70,7 @@ const SelectImageOrVideo = () => {
         }
 
         const event_data: {
-          user: { user: IUser };
+          user: IUser;
           roomId: string;
           message: {
             url?: string;
@@ -78,9 +78,7 @@ const SelectImageOrVideo = () => {
             type: string;
           };
         } = {
-          user: {
-            user,
-          },
+          user: user,
           roomId,
           message: {
             url: response.url,

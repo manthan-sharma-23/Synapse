@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'npm run build && node dist/index.js'",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'npm run build && NODE_TLS_REJECT_UNAUTHORIZED=0 node dist/index.js'",
     "build": "npx tsc -b",
     "clean": "rm -rf ./dist",
     "db:generate": "pnpm drizzle-kit generate --config=drizzle.config.ts",
-    "db:migrate": "tsx ./src/db/migrate.ts"
+    "db:migrate": "NODE_TLS_REJECT_UNAUTHORIZED=0 tsx ./src/db/migrate.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,6 +24,7 @@
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.33.0",
     "express": "^4.19.2",
+    "fs": "0.0.1-security",
     "http": "0.0.1-security",
     "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
