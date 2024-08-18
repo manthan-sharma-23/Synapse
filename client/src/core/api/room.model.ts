@@ -56,6 +56,27 @@ class RoomModel {
 
     return res;
   }
+  async get_message_info(input: { chatId: string }) {
+    if (!input.chatId) {
+      return;
+    }
+
+    const res = (
+      await axios.get(this.base_url + `/message/${input.chatId}`, {
+        headers: {
+          Authorization: this.token,
+        },
+      })
+    ).data as {
+      readAt: Date | null;
+      name: string | null;
+      username: string;
+      status: "delivered" | "read" | null;
+      image: string | null;
+    }[];
+
+    return res;
+  }
 }
 
 export default new RoomModel();

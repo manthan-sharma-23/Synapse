@@ -7,6 +7,14 @@ import { twMerge } from "tailwind-merge";
 import "@/styles/scroll-bar.css";
 import { useEffect, useRef } from "react";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import MessageInfo from "./MessageInfo";
 
 const PeerChat = ({ chats }: { chats: RoomChats[] }) => {
   const user = useRecoilValue(UserSelector);
@@ -54,7 +62,7 @@ const ChatBox = ({
   const isMainUser = user.id === mainUserId;
 
   const isRead = receipts.every((receipt) => receipt.status === "read");
-  const tickColor = isRead ? "text-green-400" : "text-white";
+  const tickColor = isRead ? "text-yellow-400" : "text-white";
 
   return (
     <div
@@ -96,14 +104,35 @@ const ChatBox = ({
             {moment(chat.createdAt).format("LT")}
           </p>
           {isMainUser && (
-            <div
-              className={twMerge(
-                "flex items-center justify-center mt-1.5",
-                tickColor
-              )}
-            >
-              <IoCheckmarkDoneOutline className={`text-[20px]`} />
-            </div>
+            <Dialog>
+              <DialogTrigger className="m-0 p-0 h-auto w-auto">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <div
+                        className={twMerge(
+                          "flex items-center justify-center mt-1.5",
+                          tickColor
+                        )}
+                      >
+                        <IoCheckmarkDoneOutline
+                          className={twMerge(
+                            "text-white text-lg ml-2",
+                            tickColor
+                          )}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Message Info</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </DialogTrigger>
+              <DialogContent>
+                <MessageInfo chat={chat} />
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </div>

@@ -12,6 +12,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import Avvvatars from "avvvatars-react";
 import { useEffect, useRef } from "react";
 import { IoCheckmarkDoneOutline } from "react-icons/io5";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import MessageInfo from "./MessageInfo";
 
 const GroupChat = ({ chats }: { chats: RoomChats[] }) => {
   const messages = bundleMessagesByUser(chats);
@@ -72,12 +80,6 @@ const MessageBundleBox = ({ message }: { message: BundledChat }) => {
         </Avatar>
 
         <div className="space-y-1">
-          {/* User Name
-          <span className="text-sm font-semibold border ">
-            {message.user.name?.split(" ")[0] || message.user.username}
-          </span> */}
-
-          {/* Message Box */}
           {message.messages &&
             message.messages.map((chat) => (
               <MessageBox
@@ -92,6 +94,7 @@ const MessageBundleBox = ({ message }: { message: BundledChat }) => {
     </div>
   );
 };
+
 const MessageBox = ({
   chat,
   isOwnMessage,
@@ -100,14 +103,12 @@ const MessageBox = ({
   isOwnMessage: boolean;
 }) => {
   const isRead = chat.receipts.every((receipt) => receipt.status === "read");
-  const tickColor = isRead ? "text-green-400" : "text-white";
-
-  console.log("GROUP reciepts", chat.receipts);
+  const tickColor = isRead ? "text-yellow-400" : "text-white";
 
   return (
     <div
       className={twMerge(
-        "max-w-xs p-3 rounded-lg text-sm relative",
+        "max-w-xs p-3 rounded-lg text-sm relative group",
         isOwnMessage
           ? "bg-red-500 text-white self-end"
           : "bg-gray-200 text-gray-800 self-start"
@@ -136,9 +137,25 @@ const MessageBox = ({
           {moment(chat.chat.createdAt).format("LT")}
         </span>
         {isOwnMessage && (
-          <IoCheckmarkDoneOutline
-            className={twMerge("text-white text-lg ml-2", tickColor)}
-          />
+          <Dialog>
+            <DialogTrigger>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <IoCheckmarkDoneOutline
+                      className={twMerge("text-white text-lg ml-2", tickColor)}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Message Info</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </DialogTrigger>
+            <DialogContent>
+              <MessageInfo chat={chat.chat} />
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </div>

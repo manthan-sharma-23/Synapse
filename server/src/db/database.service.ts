@@ -722,6 +722,31 @@ export class DatabaseService {
     return read[0];
   }
 
+  private async get_message_info(input: { chatId: string }) {
+    const reads = await db
+      .select({
+        readAt: schema.chatReadRecieptTable.readAt,
+        name: schema.userTable.name,
+        username: schema.userTable.username,
+        status: schema.chatReadRecieptTable.status,
+        image: schema.userTable.image,
+      })
+      .from(schema.chatReadRecieptTable)
+      .where(
+        and(
+          eq(schema.chatReadRecieptTable.chatId, input.chatId),
+          eq(schema.chatReadRecieptTable.status, "read")
+        )
+      )
+      .innerJoin(
+        schema.userTable,
+        eq(schema.chatReadRecieptTable.userId, schema.userTable.id)
+      )
+      .orderBy(asc(schema.chatReadRecieptTable.readAt));
+
+    return reads;
+  }
+
   get room() {
     return {
       create_room: this.create_room,
@@ -777,6 +802,7 @@ export class DatabaseService {
     return {
       read_room: this.read_room,
       read_message_room: this.read_message_room,
+      get_message_info: this.get_message_info,
     };
   }
 

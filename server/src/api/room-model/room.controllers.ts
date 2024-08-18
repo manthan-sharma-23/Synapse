@@ -68,6 +68,19 @@ class RoomController {
       return res.sendStatus(500);
     }
   }
+  async get_message_info(req: Request, res: Response) {
+    try {
+      const { chatId } = req.params;
+      const info = await databaseService.read_reciepts.get_message_info({
+        chatId,
+      });
+
+      return res.status(200).json(info);
+    } catch (error) {
+      console.log(error);
+      return res.sendStatus(500);
+    }
+  }
 }
 
 export default new RoomController();
